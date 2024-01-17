@@ -28,8 +28,7 @@ Hemato <- subset(dados, gptumor=="Hemato", select=c('tempo', 'status'))
 dados1 <- dados[,c('tempo', 'status', 'gptumor')]
 
 # Analise descritiva ------------------------------------------------------
-
-
+boxplot(dados$idade ~ dados$gptumor)
 
 # Modelos parametricos ----------------------------------------------------
 
