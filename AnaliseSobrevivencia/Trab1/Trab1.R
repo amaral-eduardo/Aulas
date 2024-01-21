@@ -3,6 +3,10 @@
 dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE)
 head(dados)
 
+# Pacotes
+require(survival)
+require(muhaz)
+
 # Traducao dos dados ------------------------------------------------------
 dados$sexo <- ifelse(dados$sexo == "Male","Mas","Fem")
 dados$desnut <- ifelse(dados$desnut == "n", "Não", "Sim")
@@ -34,16 +38,8 @@ Mtx_sob <- Surv(Mtx$tempo, Mtx$status)
 Hemato_sob <- Surv(Hemato$tempo, Hemato$status)
 
 # Analise descritiva ------------------------------------------------------
-boxplot(dados$idade ~ dados$gptumor)
-
-dados$status <- factor(dados$status)
-
-plot(dados$status ~ dados$gptumor)
-
 
 # Funcao de sobrevivencia -------------------------------------------------
-require(survival)
-
 (km1 <- survfit(dados_sob~1))
 (km2 <- survfit(Loco_sob~1))
 (km3 <- survfit(Mtx_sob~1))
@@ -58,8 +54,6 @@ legend(130,0.95, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
                          'Completo')), lwd=2, col=1:4, bty='o')
 
 # Funcao de risco ---------------------------------------------------------
-require(muhaz)
-
 # Completo
 h0 <- muhaz(dados1$tempo, dados1$status, min.time = 1, max.time = 182)
 
@@ -137,52 +131,48 @@ print(c('Completo', 62, 'Sólido localizado', NA,
 # Modelos parametricos ----------------------------------------------------
 
 # Ajuste do modelo exponencial
-exp_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "exponential")
+exp_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados1, dist = "exponential")
 summary(exp_fit)
 AIC(exp_fit)
 
 # Resíduos
 res_exp <- residuals(exp_fit, type = "deviance")
+
 # Gráficos de Resíduos
 par(mfrow=c(1,2))
 qqnorm(res_exp, main='Exponential - Q-Q Plot') ; abline(0,1)
-plot(dados$gptumor, res_exp, main='Exponential - Resíduos vs. Variável', pch=16, cex=1.5)
-
+plot(res_exp, dados1$gptumor, main='Exponential - Resíduos vs. Variável', pch=16, cex=1.5)
 
 # Ajuste do modelo gama
 #gamma_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "gamma")#
 # summary(gamma_fit)
 
-gamma_fit <- flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "gamma")
+gamma_fit <- flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados1, dist = "gamma")
 summary(gamma_fit)
 AIC(gamma_fit)
 
-
-
 # Ajuste do modelo log-normal
-lognormal_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "lognormal")
+lognormal_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados1, dist = "lognormal")
 summary(lognormal_fit)
 AIC(lognormal_fit)
 
 
 # Ajuste do modelo log-logística
-loglogistic_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "loglogistic")
+loglogistic_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados1, dist = "loglogistic")
 summary(loglogistic_fit)
 AIC(loglogistic_fit)
-
 
 # Ajuste do modelo Gompertz
 #gompertz_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "gompertz")#
 
-gompertz_fit <- flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "gompertz")
+gompertz_fit <- flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados1, dist = "gompertz")
 summary(gompertz_fit)
 AIC(gompertz_fit)
 
 # Ajuste do modelo Weibull
-weibull_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "weibull")
+weibull_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados1, dist = "weibull")
 summary(weibull_fit)
 AIC(weibull_fit)
-
 
 # Selecao do modelo -------------------------------------------------------
 
