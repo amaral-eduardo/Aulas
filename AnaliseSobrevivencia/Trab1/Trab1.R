@@ -15,6 +15,7 @@ dados$desnut <- factor(dados$desnut, levels = c("Sim","Não"))
 dados$comorbi <- factor(dados$comorbi, levels = c("Sim","Não"))
 dados$leucopenia <- factor(dados$leucopenia, levels = c("Sim","Não"))
 
+summary(dados)
 
 # Escolha da variavel -----------------------------------------------------
 

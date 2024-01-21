@@ -4,11 +4,11 @@ require(muhaz)
 require(survMisc)
 
 ### Tempo (dias) de sobrevida dos camundongos
-dados <- read.table('camun.txt', h=T)
+dados <- read.table('./AnaliseSobrevivencia/camun.txt', h=T)
 head(dados)
 
 
-### Sem covariáveis
+### Sem covari?veis
 Y <- Surv(dados$Tempo, dados$Censura)
 
 km <- survfit(Y~1)
@@ -20,11 +20,11 @@ legend(15,0.8, paste(c('Kaplan-Meier', 'Nelson-Aalen')), lwd=2, col=1:2, bty='o'
 
 
 h0 <- muhaz(dados$Tempo, dados$Censura)
-plot(h0, lwd=2, ylab='Função de Risco Estimada', xlab='Tempo de sobrevida')
+plot(h0, lwd=2, ylab='Fun??o de Risco Estimada', xlab='Tempo de sobrevida')
 
 
-### Análise Paramétrica
-### Distribuição Exponencial
+### An?lise Param?trica
+### Distribui??o Exponencial
 
 theta_hat <- 1/(sum(dados$Tempo)/sum(dados$Censura))
 
@@ -36,12 +36,12 @@ plot(km, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida', ylab='Prob. 
 lines(tt,ss, lwd=2, col=2)
 legend(15,0.8, c('Kaplan-Meier', 'Exponencial'), lwd=2, col=1:2, bty='n', cex=1.2)
 
-plot(h0, lwd=2, ylab='Função de Risco Estimada', xlab='Tempo de sobrevida')
+plot(h0, lwd=2, ylab='Fun??o de Risco Estimada', xlab='Tempo de sobrevida')
 lines(tt, hh, lwd=2, col=2)
-legend('left', c('Não-parmétrica', 'Exponencial'), lwd=2, col=1:2, bty='n', cex=1.2)
+legend('left', c('N?o-parm?trica', 'Exponencial'), lwd=2, col=1:2, bty='n', cex=1.2)
 
 
-### Tempo médio de sobrevida (estimado)
+### Tempo m?dio de sobrevida (estimado)
 ### E(T) = 1/theta
 
 tm <- 1/theta_hat
@@ -72,9 +72,9 @@ plot(km, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida', ylab='Prob. 
 lines(tt, ss1, lwd=2, col=2)
 legend(15,0.8, c('Kaplan-Meier', 'Weibull'), lwd=2, col=1:2, bty='n', cex=1.2)
 
-plot(h0, lwd=2, xlim=c(0,25), ylab='Função de Risco Estimada', xlab='Tempo de sobrevida')
+plot(h0, lwd=2, xlim=c(0,25), ylab='Fun??o de Risco Estimada', xlab='Tempo de sobrevida')
 lines(tt, hh, lwd=2, col=2)
-legend('left', c('Não-parmétrica', 'Weibull'), lwd=2, col=1:2, bty='n', cex=1.2)
+legend('left', c('N?o-parm?trica', 'Weibull'), lwd=2, col=1:2, bty='n', cex=1.2)
 
 
 ### Log-normal
@@ -86,7 +86,7 @@ si <- 2
 
 tt <- seq(0, 4, 0.01)
 
-plot(hlnorm(tt, mu[1], si)~tt, type='l', lwd=2, ylab='Função de Risco Estimada', xlab='Tempo de sobrevida')
+plot(hlnorm(tt, mu[1], si)~tt, type='l', lwd=2, ylab='Fun??o de Risco Estimada', xlab='Tempo de sobrevida')
 lines(hlnorm(tt, mu[2], si)~tt, lwd=2, col=2)
 lines(hlnorm(tt, mu[3], si)~tt, lwd=2, col=3)
 legend('topright', c('0', '1', '2'), title=expression(mu), lwd=2, col=1:3, bty='n', cex=1.2)
@@ -106,9 +106,9 @@ plot(km, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida', ylab='Prob. 
 lines(tt, ss2, lwd=2, col=2)
 legend(15,0.8, c('Kaplan-Meier', 'LogNormal'), lwd=2, col=1:2, bty='n', cex=1.2)
 
-plot(h0, lwd=2, xlim=c(0,25), ylab='Função de Risco Estimada', xlab='Tempo de sobrevida')
+plot(h0, lwd=2, xlim=c(0,25), ylab='Fun??o de Risco Estimada', xlab='Tempo de sobrevida')
 lines(tt, hh, lwd=2, col=2)
-legend('left', c('Não-parmétrica', 'LogNormal'), lwd=2, col=1:2, bty='n', cex=1.2)
+legend('left', c('N?o-parm?trica', 'LogNormal'), lwd=2, col=1:2, bty='n', cex=1.2)
 
 plot(km, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida', ylab='Prob. de sobrevida estimada')
 lines(tt, ss0, lwd=2, col=2)
