@@ -32,63 +32,17 @@ dados_sob <- Surv(dados1$tempo, dados1$status)
 Loco_sob <- Surv(Loco$tempo, Loco$status)
 Mtx_sob <- Surv(Mtx$tempo, Mtx$status)
 Hemato_sob <- Surv(Hemato$tempo, Hemato$status)
-# Analise descritiva ------------------------------------------------------
 
+# Analise descritiva ------------------------------------------------------
 boxplot(dados$idade ~ dados$gptumor)
+
+dados$status <- factor(dados$status)
+
+plot(dados$status ~ dados$gptumor)
 
 
 # Funcao de sobrevivencia -------------------------------------------------
-
 require(survival)
-# dados_sob <- Surv(dados1$tempo, dados1$status)
-# 
-# km1 <- survfit(dados_sob~1, conf.type='plain')
-# summary(km1)
-# 
-# plot(km1,  mark.time=T, conf.int=T, main = "Completo")
-# 
-# #### Loco
-# Loco_sob <- Surv(Loco$tempo, Loco$status)
-# km2 <- survfit(Loco_sob~1, conf.type='plain')
-# 
-# summary(km2)
-# 
-# plot(km2,  mark.time=T, conf.int=T, main = "Loco")
-# 
-# km <- survfit(Loco_sob~1)
-# na <- survfit(Loco_sob~1, type='fh')
-# plot(km, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida', ylab='Prob. de sobrevida estimada')
-# lines(na, mark.time=T, conf.int=F, lwd=2, col=2)
-# legend(15,0.3, paste(c('Kaplan-Meier', 'Nelson-Aalen')), lwd=2, col=1:2, bty='o')
-# 
-# 
-# #### Mtx
-# Mtx_sob <- Surv(Mtx$tempo, Mtx$status)
-# km3 <- survfit(Mtx_sob~1, conf.type='plain')
-# 
-# summary(km3)
-# 
-# plot(km3,  mark.time=T, conf.int=T, main = "Mtx")
-# 
-# km <- survfit(Mtx_sob~1)
-# na <- survfit(Mtx_sob~1, type='fh')
-# plot(km, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida', ylab='Prob. de sobrevida estimada')
-# lines(na, mark.time=T, conf.int=F, lwd=2, col=2)
-# legend(150,0.8, paste(c('Kaplan-Meier', 'Nelson-Aalen')), lwd=2, col=1:2, bty='o')
-# 
-# #### Hemato
-# Hemato_sob <- Surv(Hemato$tempo, Hemato$status)
-# km4 <- survfit(Hemato_sob~1, conf.type='plain')
-# 
-# summary(km4)
-# 
-# plot(km4,  mark.time=T, conf.int=T, main = "Hemato")
-# 
-# km <- survfit(Hemato_sob~1)
-# na <- survfit(Hemato_sob~1, type='fh')
-# plot(km, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida', ylab='Prob. de sobrevida estimada')
-# lines(na, mark.time=T, conf.int=F, lwd=2, col=2)
-# legend(150,0.8, paste(c('Kaplan-Meier', 'Nelson-Aalen')), lwd=2, col=1:2, bty='o')
 
 (km1 <- survfit(dados_sob~1))
 (km2 <- survfit(Loco_sob~1))
@@ -126,9 +80,6 @@ lines(h2, mark.time=T, conf.int=F, lwd=2, col=3)
 lines(h0, mark.time=T, conf.int=F, lwd=2, col=4)
 legend(130,0.025, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
                          'Completo')), lwd=2, col=1:4, bty='o')
-
-
-
 
 # Media e Mediana ---------------------------------------------------------
 
@@ -185,11 +136,55 @@ print(c('Completo', 62, 'Sólido localizado', NA,
 
 # Modelos parametricos ----------------------------------------------------
 
+# Ajuste do modelo exponencial
+exp_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "exponential")
+summary(exp_fit)
+AIC(exp_fit)
+
+# Resíduos
+res_exp <- residuals(exp_fit, type = "deviance")
+# Gráficos de Resíduos
+par(mfrow=c(1,2))
+qqnorm(res_exp, main='Exponential - Q-Q Plot') ; abline(0,1)
+plot(dados$gptumor, res_exp, main='Exponential - Resíduos vs. Variável', pch=16, cex=1.5)
+
+
+# Ajuste do modelo gama
+#gamma_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "gamma")#
+# summary(gamma_fit)
+
+gamma_fit <- flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "gamma")
+summary(gamma_fit)
+AIC(gamma_fit)
+
+
+
+# Ajuste do modelo log-normal
+lognormal_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "lognormal")
+summary(lognormal_fit)
+AIC(lognormal_fit)
+
+
+# Ajuste do modelo log-logística
+loglogistic_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "loglogistic")
+summary(loglogistic_fit)
+AIC(loglogistic_fit)
+
+
+# Ajuste do modelo Gompertz
+#gompertz_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "gompertz")#
+
+gompertz_fit <- flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "gompertz")
+summary(gompertz_fit)
+AIC(gompertz_fit)
+
+# Ajuste do modelo Weibull
+weibull_fit <- survreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "weibull")
+summary(weibull_fit)
+AIC(weibull_fit)
 
 
 # Selecao do modelo -------------------------------------------------------
 
 
 # Interpretacao ----------------------------------------------------------
-
-

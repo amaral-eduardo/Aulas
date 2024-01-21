@@ -136,10 +136,6 @@ summary(fit_weibull)
 shape_hat <- fit_weibull$estimate[1]
 scale_hat <- fit_weibull$estimate[2]
 
-
-
-
-
 tt <- seq(0, max(dados$Tempo), 0.1)
 ss1 <- 1 - pweibull(tt, shape=shape_hat, scale=scale_hat)
 hh <- dweibull(tt, shape=shape_hat, scale=scale_hat)/ss
