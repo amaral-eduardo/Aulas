@@ -1,8 +1,7 @@
 ---
 title: ''
 output:
-  pdf_document: default
-  word_document: default
+  html_document: default
 geometry: left = 2.5cm, right = 2cm, top = 2cm, bottom = 2cm
 fontsize: 12pt
 header-includes:
@@ -55,27 +54,23 @@ library(RColorBrewer)
 #library(Hmisc)
 library(corrplot)
 library(pander)
-require('glmtoolbox')
 library(knitr)
 library(gridExtra)
 library(car)
 library(effects)
 library(GLMsData)
 #library(DHARMa)
-library(pander)
 library(dplyr)
 library(tibble)
 #install.packages("DHARMa")
+require(survival)
+require(muhaz)
+require(flexsurv)
+
 
 panderOptions("table.split.cells", 100) #aumenta a quantidades de carcteres permitidos em uma celula da tabela "pander" 
 pander::panderOptions('table.split.table', 300)
 panderOptions('table.alignment.default', 'left')
-```
-
-```{r dados}
-data(polyps)
-dados <- polyps
-
 ```
 
 ```{r echo=FALSE}
@@ -103,43 +98,99 @@ titulo = "ESTUDO SOBRE OS PACIENTES COM CÂNCER INTERNADOS NA UTI DO INCA"
 
 \newpage
 
-# INTRODUÇÃO
+Os dados que utilizaremos são proveninentes de um grupo de 862 pacientes com câncer internados na Unidade de Terapia Intensiva (UTI) do Instituto Nacional de Câncer (INCA), estudados por um período de 182 dias, publicado por Soares e cols. (2006). As variáveis presentes são:
 
-## DESCRIÇÃO
+ - id: identificação do paciente;
+ - tempo: a partir do primeiro caso, acompanhado em dias;
+ - status: óbito = 1, censura = 0;
+ - sexo: Mas = masculino, Fem = feminino;
+ - idade: em anos completos;
+ - gptumor: 	tipo de tumor: Loco = sólido localizado; Mtx = metastático; Hemato = hematológico;
+ - desnut: Sim = perda de peso recente acima de 10% ou IMC < 18; Não: c.c.;
+ - comorbi: Sim = comorbidades severas presentes; Não = ausente;
+ - leucopenia: Sim = leucopenia presente; Não = ausente.
+ 
+Temos então como objetivo analisar o tempo de vida desses pacientes, através dos fatores apresentados, observando o óbito e a censura presentes. Nesta primeira visita, estaremos trabalhando em torno da variável gptumor.
 
+```{r dados}
+dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE)
 
+dados$sexo <- ifelse(dados$sexo == "Male","Mas","Fem")
+dados$desnut <- ifelse(dados$desnut == "n", "Não", "Sim")
+dados$comorbi <- ifelse(dados$comorbi == "n", "Não", "Sim")
+dados$leucopenia <- ifelse(dados$leucopenia == "n", "Não", "Sim")
 
-## Gráficos
+dados$sexo <- factor(dados$sexo, levels = c("Mas","Fem"))
+dados$desnut <- factor(dados$desnut, levels = c("Sim","Não"))
+dados$comorbi <- factor(dados$comorbi, levels = c("Sim","Não"))
+dados$leucopenia <- factor(dados$leucopenia, levels = c("Sim","Não"))
+dados$gptumor <- factor(dados$gptumor, levels = c("Loco", "Mtx", "Hemato"))
 
+################
 
+Loco <- subset(dados, gptumor=="Loco", select=c('tempo', 'status'))
+Mtx <- subset(dados, gptumor=="Mtx", select=c('tempo', 'status'))
+Hemato <- subset(dados, gptumor=="Hemato", select=c('tempo', 'status'))
 
+dados1 <- dados[,c('tempo', 'status', 'gptumor')]
 
+dados_sob <- Surv(dados1$tempo, dados1$status)
+Loco_sob <- Surv(Loco$tempo, Loco$status)
+Mtx_sob <- Surv(Mtx$tempo, Mtx$status)
+Hemato_sob <- Surv(Hemato$tempo, Hemato$status)
 
-# AJUSTE DO MODELO 
-
-
-## Verificação de Ajuste para o Modelo de Poisson
-
-```{r poisson-fit-check, warning=FALSE, message=FALSE, fig.width=10, fig.height=3}
-
-
-#grid.arrange(p1, p2, ncol = 2)
+km1 <- survfit(dados_sob~1)
+km2 <- survfit(Loco_sob~1)
+km3 <- survfit(Mtx_sob~1)
+km4 <- survfit(Hemato_sob~1)
 ```
 
 
-# AJUSTANDO O MODELO BINOMIAL NEGATIVA
+```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5}
+plot(km2, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
+     ylab='Prob. de sobrevida estimada', main = "Funçao de Sobrevivencia")
+lines(km3, mark.time=T, conf.int=F, lwd=2, col=2)
+lines(km4, mark.time=T, conf.int=F, lwd=2, col=3)
+lines(km1, mark.time=T, conf.int=F, lwd=2, col=4)
+legend(130,0.95, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
+                         'Completo')), lwd=2, col=1:4, bty='o')
+```
+
+A figura acima, referente a função de sobrevivência nos mostra o tempo de sobrevida relacionado com a problabilidade de sobrevida estimada, ou seja, separando pelo tipo de tumor (gptumor), temos que o sólido localizado (Loco) está acima dos demais, isto nos da indícios de que quem desenvolveu apenas este tumor, tem uma sobrevida maior que quem tem os outros dois tipos de tumores. Note-se também que o Loco influencia no Completo, este que se refere aos dados totais.
 
 
+```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5}
+h0 <- muhaz(dados1$tempo, dados1$status, min.time = 1, max.time = 182)
 
+# Loco
+h1 <- muhaz(Loco$tempo, Loco$status, min.time = 1, max.time = 182)
 
+# Hemato
+h2 <- muhaz(Hemato$tempo, Hemato$status, min.time = 1, max.time = 182)
 
+# Mtx
+h3 <- muhaz(Mtx$tempo, Mtx$status, min.time = 1, max.time = 182)
 
+# Graficos
+plot(h1, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
+     ylab='Função de Risco Estimada', main = "Funçao de Risco")
+lines(h3, mark.time=T, conf.int=F, lwd=2, col=2)
+lines(h2, mark.time=T, conf.int=F, lwd=2, col=3)
+lines(h0, mark.time=T, conf.int=F, lwd=2, col=4)
+legend(130,0.025, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
+                         'Completo')), lwd=2, col=1:4, bty='o')
+```
 
+Temos na figura acima um gráfico referente a função de risco, que as informações batem com a função de sobrevivência, tendo os pacientes com um tumor sólido localizado com um tempo de sobrevida maior que os demais tumores.
 
+Observando agora as medidas de tendência central junto do desvio padrão e intervalo de confiância, temos uma confirmação do quee ja estavamos vendo anteriormente, aonde o Sólido localizado esta com uma sobrevida maior, isto extende-se ainda ao fato de sua mediana estar acima do total de dias que o experimento correu.
 
-
-
-
+Dados|Media|DP|IC Inferior|IC Superior|Mediana
+---------|-------|-------------|---------|-------|-------------
+Sólido localizado|226.3667|13.77624|199.3657|253.3676|182+
+Metastático|92.77064|8.885816|75.35476|110.18652|18
+Hematológico|74.68333|6.817624|61.32104|88.04563|19.5
+Completo|160.7074|7.194252|146.6069|174.8079|62
 
 
 # CONCLUSÃO
@@ -147,25 +198,76 @@ titulo = "ESTUDO SOBRE OS PACIENTES COM CÂNCER INTERNADOS NA UTI DO INCA"
 
 ## Análise de deviance
 
+```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5}
+
+# Modelos para comparação
+lognormal_fit = flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "lognormal")
+
+################################ DEF analisar_residuos ############################################
+analisar_residuos <- function(ajuste, dados, distribuicao) {
+  # Laço de iteração para calcular estimativas e gerar resíduos simulados
+  s <- c()
+  
+  for(i in 1:nrow(dados)) {
+    s[i] <- summary(ajuste, type='survival', t=dados$tempo[i], newdata=dados[i,], tidy=TRUE)$est
+    #if(i %% 10 == 0) print(i)
+  }
+  
+  # Geração de resíduos simulados
+  a <- runif(length(s), min=0, max=s)
+  r <- ifelse(dados$status == 1, qnorm(s), qnorm(a))
+  
+  # Geração do gráfico HNP
+  Grap = hnp(r, plot.sim = F, main = paste("HNP"))
+  G <- with(Grap, data.frame(x, lower, upper, median, residuals))
+  
+  grafico_hnp <- ggplot(data = G, aes(x)) +
+    geom_point(aes(y = residuals), color = "black", shape = 1) +
+    geom_line(aes(y = lower), color = "black") +
+    geom_line(aes(y = upper), color = "black") +
+    geom_line(aes(y = median), color = "black", linetype = "dashed") + 
+    ylab("Resíduos") +
+    xlab("Quantis Teóricos") +
+    ggtitle(paste0("HNP"," - ",distribuicao)) + 
+    theme_minimal() +
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+          panel.border = element_rect(color = "black", fill = NA, size = 1))
+  #print(paste0("HNP"," - ",distribuicao,"\n"))
+  print(grafico_hnp)
+  
+}
+
+#########################################################################################
+
+nomes <- c("Log-normal")
+modelos <- list(lognormal_fit)
+
+for (i in 1:length(nomes)) {
+  analisar_residuos(modelos[[i]], dados, nomes[i])
+}
+
+knitr::kable(lognormal_fit$res.t,align = "c")
+```
 
 
 
 
-###  Teste de razão de verossimilhança
+-----------------------------
+    Modelo       AIC    BIC  
+--------------- ------ ------
+  Exponencial    5955   5969 
 
+     Gama        5576   5595 
 
+  Log-normal     5427   5446 
 
-A escolha do modelo Binomial Negativo é respaldada por testes estatísticos e visuais. Os gráficos de resíduos mostram uma melhor aderência à normalidade e menor heterocedasticidade no modelo Binomial Negativo em comparação com o modelo de Poisson. Além disso, testes de Likelihood Ratio e ANOVA de deviance indicam uma melhoria estatisticamente significativa na adequação do modelo Binomial Negativo. Portanto, optamos pelo modelo Binomial Negativo para analisar o efeito do Sulindaco em pacientes com polipose adenomatosa familiar.
+ Log-logística   5462   5481 
 
+   Gompertz      5389   5408 
 
-
-
-
-
-
-
-
-
+    Weibull      5524   5543 
+-----------------------------
 
 
 

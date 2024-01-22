@@ -96,7 +96,7 @@ pander(tabela_resultados)
 
 
 
-
+knitr::kable(lognormal_fit$res.t,align = "c")
 
 
 

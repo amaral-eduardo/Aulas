@@ -44,10 +44,10 @@ Hemato_sob <- Surv(Hemato$tempo, Hemato$status)
 # Analise descritiva ------------------------------------------------------
 
 # Funcao de sobrevivencia -------------------------------------------------
-(km1 <- survfit(dados_sob~1))
-(km2 <- survfit(Loco_sob~1))
-(km3 <- survfit(Mtx_sob~1))
-(km4 <- survfit(Hemato_sob~1))
+km1 <- survfit(dados_sob~1)
+km2 <- survfit(Loco_sob~1)
+km3 <- survfit(Mtx_sob~1)
+km4 <- survfit(Hemato_sob~1)
 
 plot(km2, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
      ylab='Prob. de sobrevida estimada')
