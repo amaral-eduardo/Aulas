@@ -1,0 +1,175 @@
+---
+title: ''
+output:
+  pdf_document: default
+  word_document: default
+geometry: left = 2.5cm, right = 2cm, top = 2cm, bottom = 2cm
+fontsize: 12pt
+header-includes:
+- \usepackage{float}
+- \usepackage{sectsty}
+- \usepackage{paralist}
+- \usepackage{fancyhdr}
+- \usepackage{lastpage}
+- \usepackage{dcolumn}
+- \usepackage{anyfontsize}
+- \usepackage{pdflscape}
+- \usepackage[portuguese]{babel}
+- \usepackage[utf8]{inputenc}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+- \usepackage{multicol}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+options(htmltools.dir.version = FALSE)
+```
+
+```{r}
+
+# tinytex::r_texmf()
+# 
+# tinytex:::install_prebuilt()
+# tinytex::r_texmf()
+# unlink(".RData", recursive = TRUE)
+# tinytex::tlmgr_repo()
+
+
+
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+library(hnp)
+library(pscl)
+library(pROC)
+library(caret)
+library(lmtest)
+#library(QuantPsyc)
+library(margins)
+library(RColorBrewer)
+#library(Hmisc)
+library(corrplot)
+library(pander)
+require('glmtoolbox')
+library(knitr)
+library(gridExtra)
+library(car)
+library(effects)
+library(GLMsData)
+#library(DHARMa)
+library(pander)
+library(dplyr)
+library(tibble)
+#install.packages("DHARMa")
+
+panderOptions("table.split.cells", 100) #aumenta a quantidades de carcteres permitidos em uma celula da tabela "pander" 
+pander::panderOptions('table.split.table', 300)
+panderOptions('table.alignment.default', 'left')
+```
+
+```{r dados}
+data(polyps)
+dados <- polyps
+
+```
+
+```{r echo=FALSE}
+academico1 = "EDUARDO AMARAL"
+ra1 = "RA 110108"
+
+academico2 = "EDUARDO PEDRO FARIAS"
+ra2 = "RA 110116"
+
+prof = "PROF. DR. BRIAN ALVAREZ RIBEIRO DE MELO"
+
+materia = "ANALISE DE SOBREVIVÊNCIA"
+titulo = "ESTUDO SOBRE OS PACIENTES COM CÂNCER INTERNADOS NA UTI DO INCA"
+
+#tinytex:::install_prebuilt()
+
+```
+
+```{r echo=FALSE, child='capa.Rmd'}
+```
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+# INTRODUÇÃO
+
+## DESCRIÇÃO
+
+
+
+## Gráficos
+
+
+
+
+
+# AJUSTE DO MODELO 
+
+
+## Verificação de Ajuste para o Modelo de Poisson
+
+```{r poisson-fit-check, warning=FALSE, message=FALSE, fig.width=10, fig.height=3}
+
+
+#grid.arrange(p1, p2, ncol = 2)
+```
+
+
+# AJUSTANDO O MODELO BINOMIAL NEGATIVA
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# CONCLUSÃO
+
+
+## Análise de deviance
+
+
+
+
+
+###  Teste de razão de verossimilhança
+
+
+
+A escolha do modelo Binomial Negativo é respaldada por testes estatísticos e visuais. Os gráficos de resíduos mostram uma melhor aderência à normalidade e menor heterocedasticidade no modelo Binomial Negativo em comparação com o modelo de Poisson. Além disso, testes de Likelihood Ratio e ANOVA de deviance indicam uma melhoria estatisticamente significativa na adequação do modelo Binomial Negativo. Portanto, optamos pelo modelo Binomial Negativo para analisar o efeito do Sulindaco em pacientes com polipose adenomatosa familiar.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

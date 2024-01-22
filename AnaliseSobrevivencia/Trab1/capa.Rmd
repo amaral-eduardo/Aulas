@@ -1,0 +1,84 @@
+---
+title: " "
+output: pdf_document
+geometry: "left = 2.5cm, right = 2cm, top = 2cm, bottom = 2cm"
+fontsize: 12pt
+header-includes:
+  - \usepackage{float}
+  - \usepackage{graphicx}
+  - \usepackage{sectsty}
+  - \usepackage{paralist}
+  - \usepackage{fancyhdr}
+  - \usepackage{lastpage}
+  - \usepackage{dcolumn}
+  - \usepackage{anyfontsize}
+  - \usepackage{pdflscape}
+  - \newcommand{\blandscape}{\begin{landscape}}
+  - \newcommand{\elandscape}{\end{landscape}}
+---
+
+
+
+\allsectionsfont{\centering}
+\subsectionfont{\raggedright}
+\subsubsectionfont{\raggedright}
+\pagenumbering{gobble}
+
+
+\begin{centering}
+
+\includegraphics[width=7.5cm]{simbolouem.png}
+
+UNIVERSIDADE ESTADUAL DE MARINGÁ\\
+CENTRO DE CIÊNCIAS EXATAS\\
+DEPARTAMENTO DE ESTATÍSTICA\\
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+
+`r academico1`
+
+`r ra1`
+
+\vspace{12pt}
+
+`r academico2`
+
+`r ra2`
+
+\vspace{12pt}
+\vspace{12pt}
+
+`r prof`
+
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+- `r materia` -\\
+- `r titulo` -\\
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+\vspace{12pt}
+
+Maringá\\
+`r as.integer(format(Sys.Date(), "%Y"))`
+
+\end{centering}
+
