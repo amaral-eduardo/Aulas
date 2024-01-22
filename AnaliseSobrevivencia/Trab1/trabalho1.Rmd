@@ -218,7 +218,7 @@ analisar_residuos <- function(ajuste, dados, distribuicao) {
   r <- ifelse(dados$status == 1, qnorm(s), qnorm(a))
   
   # Geração do gráfico HNP
-  Grap = hnp(r, plot.sim = F, main = paste("HNP"))
+  Grap = hnp(r, plot.sim = F, main = paste("HNP"), halfnormal = F)
   G <- with(Grap, data.frame(x, lower, upper, median, residuals))
   
   grafico_hnp <- ggplot(data = G, aes(x)) +
@@ -233,7 +233,6 @@ analisar_residuos <- function(ajuste, dados, distribuicao) {
     theme_bw() +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
           panel.border = element_rect(color = "black", fill = NA, size = 1))
-  #print(paste0("HNP"," - ",distribuicao,"\n"))
   print(grafico_hnp)
   
 }
@@ -246,6 +245,8 @@ modelos <- list(lognormal_fit)
 for (i in 1:length(nomes)) {
   analisar_residuos(modelos[[i]], dados, nomes[i])
 }
+
+
 
 knitr::kable(lognormal_fit$res.t,align = "c")
 ```
@@ -268,10 +269,4 @@ knitr::kable(lognormal_fit$res.t,align = "c")
 
     Weibull      5524   5543 
 -----------------------------
-
-
-
-
-
-
 
