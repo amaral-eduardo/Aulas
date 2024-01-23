@@ -50,12 +50,12 @@ km3 <- survfit(Mtx_sob~1)
 km4 <- survfit(Hemato_sob~1)
 
 plot(km2, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
-     ylab='Prob. de sobrevida estimada')
-lines(km3, mark.time=T, conf.int=F, lwd=2, col=2)
-lines(km4, mark.time=T, conf.int=F, lwd=2, col=3)
-lines(km1, mark.time=T, conf.int=F, lwd=2, col=4)
+     ylab='Prob. de sobrevida estimada', col = 4)
+lines(km3, mark.time=T, conf.int=F, lwd=2, col=3)
+lines(km4, mark.time=T, conf.int=F, lwd=2, col=2)
+lines(km1, mark.time=T, conf.int=F, lwd=2, col=1)
 legend(130,0.95, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
-                         'Completo')), lwd=2, col=1:4, bty='o')
+                         'Completo')), lwd=2, col=4:1, bty='o')
 
 # Funcao de risco ---------------------------------------------------------
 # Completo
@@ -148,7 +148,6 @@ gompertz_fit = flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "
 
 weibull_fit = flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "weibull")
 
-
 ################################ DEF analisar_residuos ############################################
 analisar_residuos <- function(ajuste, dados, distribuicao) {
   # Laço de iteração para calcular estimativas e gerar resíduos simulados
@@ -164,7 +163,7 @@ analisar_residuos <- function(ajuste, dados, distribuicao) {
   r <- ifelse(dados$status == 1, qnorm(s), qnorm(a))
   
   # Geração do gráfico HNP
-  Grap = hnp(r, plot.sim = F, main = paste("HNP"))
+  Grap = hnp(r, plot.sim = F, main = paste("HNP"), halfnormal = F)
   G <- with(Grap, data.frame(x, lower, upper, median, residuals))
   
   grafico_hnp <- ggplot(data = G, aes(x)) +
@@ -231,5 +230,53 @@ pander(tabela_resultados)
 
 # Selecao do modelo -------------------------------------------------------
 
+knitr::kable(gompertz_fit$res.t,align = "c")
 
+
+
+summary(gompertz_fit)
+coef(gompertz_fit)
+
+a <- summary(gompertz_fit)
 # Interpretacao ----------------------------------------------------------
+
+Loco_gom <- a$`gptumor=Loco`
+Hemato_gom <- a$`gptumor=Hemato`
+Mtx_gom <- a$`gptumor=Mtx`
+# 
+# ###### summary(gompertz_fit)$ aplicar
+# 
+# h1 <- muhaz(Loco$tempo, Loco$status, min.time = 1, max.time = 182)
+# 
+# h2 <- muhaz(Hemato$tempo, Hemato$status, min.time = 1, max.time = 182)
+# 
+# h3 <- muhaz(Mtx$tempo, Mtx$status, min.time = 1, max.time = 182)
+# 
+# # Graficos
+# plot(h1, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
+#      ylab='Função de Risco Estimada')
+# lines(h3, mark.time=T, conf.int=F, lwd=2, col=2)
+# lines(h2, mark.time=T, conf.int=F, lwd=2, col=3)
+# lines(h0, mark.time=T, conf.int=F, lwd=2, col=4)
+# legend(130,0.025, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
+#                           'Completo')), lwd=2, col=1:4, bty='o')
+
+plot(km2, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
+     ylab='Prob. de sobrevida estimada', col = 4)
+lines(km3, mark.time=T, conf.int=F, lwd=2, col=3)
+lines(km4, mark.time=T, conf.int=F, lwd=2, col=2)
+legend(100,1, paste(c('Sólido localizado', 'Metastático',
+                      'Hematológico')), lwd=1, col=4:2, bty='o')
+
+lines(Loco_gom$time,Loco_gom$est, lty = 2, col = 4, lwd = 2)
+lines(Hemato_gom$time,Hemato_gom$est, lty = 2, col = 2, lwd = 2)
+lines(Mtx_gom$time,Mtx_gom$est, lty = 2, col = 3, lwd = 2)
+
+####################
+# a <- 1 - plnorm(1:182, lognormal_fit$res[1], lognormal_fit$res[2])
+# plot(a)
+
+loco_a <- 1 - pgompertz(1:182, shape = -0.02722, rate = 0.01851)## Fazer com decimal
+
+
+plot(a)

@@ -148,12 +148,12 @@ km4 <- survfit(Hemato_sob~1)
 
 ```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5}
 plot(km2, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
-     ylab='Prob. de sobrevida estimada', main = "Funçao de Sobrevivencia")
-lines(km3, mark.time=T, conf.int=F, lwd=2, col=2)
-lines(km4, mark.time=T, conf.int=F, lwd=2, col=3)
-lines(km1, mark.time=T, conf.int=F, lwd=2, col=4)
+     ylab='Prob. de sobrevida estimada', col = 4)
+lines(km3, mark.time=T, conf.int=F, lwd=2, col=3)
+lines(km4, mark.time=T, conf.int=F, lwd=2, col=2)
+lines(km1, mark.time=T, conf.int=F, lwd=2, col=1)
 legend(130,0.95, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
-                         'Completo')), lwd=2, col=1:4, bty='o')
+                         'Completo')), lwd=2, col=4:1, bty='o')
 ```
 
 A figura acima, referente a função de sobrevivência nos mostra o tempo de sobrevida relacionado com a problabilidade de sobrevida estimada, ou seja, separando pelo tipo de tumor (gptumor), temos que o sólido localizado (Loco) está acima dos demais, isto nos da indícios de que quem desenvolveu apenas este tumor, tem uma sobrevida maior que quem tem os outros dois tipos de tumores. Note-se também que o Loco influencia no Completo, este que se refere aos dados totais.
