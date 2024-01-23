@@ -50,7 +50,7 @@ km3 <- survfit(Mtx_sob~1)
 km4 <- survfit(Hemato_sob~1)
 
 plot(km2, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
-     ylab='Prob. de sobrevida estimada', col = 4)
+     ylab='Prob. de sobrevida estimada', main = 'Função de Sobrevivência', col = 4)
 lines(km3, mark.time=T, conf.int=F, lwd=2, col=3)
 lines(km4, mark.time=T, conf.int=F, lwd=2, col=2)
 lines(km1, mark.time=T, conf.int=F, lwd=2, col=1)
@@ -72,12 +72,12 @@ h3 <- muhaz(Mtx$tempo, Mtx$status, min.time = 1, max.time = 182)
 
 # Graficos
 plot(h1, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
-     ylab='Função de Risco Estimada')
-lines(h3, mark.time=T, conf.int=F, lwd=2, col=2)
-lines(h2, mark.time=T, conf.int=F, lwd=2, col=3)
-lines(h0, mark.time=T, conf.int=F, lwd=2, col=4)
+     ylab='Função de Risco Estimada', col=4, main = "Funçao de Risco")
+lines(h3, mark.time=T, conf.int=F, lwd=2, col=3)
+lines(h2, mark.time=T, conf.int=F, lwd=2, col=2)
+lines(h0, mark.time=T, conf.int=F, lwd=2, col=1)
 legend(130,0.025, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
-                         'Completo')), lwd=2, col=1:4, bty='o')
+                         'Completo')), lwd=2, col=4:1, bty='o')
 
 # Media e Mediana ---------------------------------------------------------
 
