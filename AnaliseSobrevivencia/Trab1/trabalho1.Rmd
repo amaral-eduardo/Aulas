@@ -112,7 +112,7 @@ titulo = "ESTUDO SOBRE OS PACIENTES COM CÂNCER INTERNADOS NA UTI DO INCA"
  - comorbi: Sim = comorbidades severas presentes; Não = ausente;
  - leucopenia: Sim = leucopenia presente; Não = ausente.
  
-Temos então como objetivo analisar o tempo de vida desses pacientes, através dos fatores apresentados, observando o óbito e a censura presentes. Nesta primeira visita, estaremos trabalhando em torno da variável gptumor.
+Temos então como objetivo analisar o tempo de vida desses pacientes, através dos fatores apresentados, observando o óbito e a censura presentes. Nesta primeira visita, estaremos trabalhando em torno da variável gptumor. Daremos inicio estimando a função de sobrevivência pelo método de Kaplan-Meier.
 
 ```{r dados}
 dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE)
@@ -247,45 +247,61 @@ par(mfrow = c(1, 2))
 
 nomesTumor <- c("Sólido localizado", 'Metastático', 'Hematológico')
 
+df_survival <- data.frame(Modelo = character(0), AIC = numeric(0), BIC = numeric(0))
+
 for(i in 1:3){
   
   # Exponential
   fit_exp <- fit_data(dadosT[[i]], dist = "exp", time = "tempo", censor = "status")
   ss_exp <- 1 - pexp(tt, fit_exp$estimate)
   hh_exp <- dexp(tt, rate = fit_exp$estimate)
+  aic_exp <- summary(fit_exp)$aic
+  bic_exp <- summary(fit_exp)$bic
     
   # Weibull
   fit_weib <- fit_data(dadosT[[i]], dist = "weibull", time = "tempo", censor = "status")
   ss_weib <- 1 - pweibull(tt, shape = fit_weib$estimate[1], scale = fit_weib$estimate[2])
   hh_weib <- dweibull(tt,  shape = fit_weib$estimate[1], scale = fit_weib$estimate[2])
+  aic_weib <- summary(fit_weib)$aic
+  bic_weib <- summary(fit_weib)$bic
   
   # Gamma
   fit_gamma <- flexsurvreg(Surv(dadosT[[i]]$tempo, dadosT[[i]]$status) ~ 1,
                            dist = "gamma")
   ss_gamma <- 1 - pgamma(tt, fit_gamma$res[1], fit_gamma$res[2])
   hh_gamma <- dgamma(tt, fit_gamma$res[1], fit_gamma$res[2])
+  aic_gamma <- AIC(fit_gamma)
+  bic_gamma <- BIC(fit_gamma)
   
   # Log-normal
   fit_lnorm <- fit_data(dadosT[[i]], dist = "lnorm", time = "tempo", censor = "status")
   ss_lnorm <- 1 - plnorm(tt, fit_lnorm$estimate[1], fit_lnorm$estimate[2])
   hh_lnorm <- dlnorm(tt, fit_lnorm$estimate[1], fit_lnorm$estimate[2])
+  aic_lnorm <- summary(fit_lnorm)$aic
+  bic_lnorm <- summary(fit_lnorm)$bic
   
   # Log-logistic
-  fit_llog <- fit_data(dadosT[[i]], dist = "lnorm", time = "tempo", censor = "status")
+  fit_llog <- fit_data(dadosT[[i]], dist = "llogis", time = "tempo", censor = "status")
   ss_llog <- 1 - pllogis(tt, fit_llog$estimate[1], fit_llog$estimate[1])
   hh_llog <- dllogis(tt, fit_llog$estimate[1], fit_llog$estimate[2])
+  aic_llog <- summary(fit_llog)$aic
+  bic_llog <- summary(fit_llog)$bic
   
   # Gompertz
   fit_gomp <- flexsurvreg(Surv(dadosT[[i]]$tempo, dadosT[[i]]$status) ~ 1,
                           dist = "gamma")
   ss_gomp <- 1 - pgompertz(tt, fit_gomp$res[1], fit_gomp$res[2])
   hh_gomp <- dgompertz(tt, fit_gomp$res[1], fit_gomp$res[2])
+  aic_gomp <- AIC(fit_gomp)
+  bic_gomp <- BIC(fit_gomp)
   
   # Generalized Gama
   fit_ggamma <- flexsurvreg(Surv(dadosT[[i]]$tempo, dadosT[[i]]$status) ~ 1,
                             dist = "gengamma.orig")
   ss_ggamma <- 1 - pgengamma.orig(tt, fit_ggamma$res[1], fit_ggamma$res[2], fit_ggamma$res[3])
   hh_ggamma <- dgengamma.orig(tt, fit_ggamma$res[1], fit_ggamma$res[2], fit_ggamma$res[3])
+  aic_ggamma <- AIC(fit_ggamma)
+  bic_ggamma <- BIC(fit_ggamma)
   
   # Plot survival function
   plot(KM[[i]], mark.time = F, conf.int = F, col = "black",
@@ -308,45 +324,59 @@ for(i in 1:3){
        ylab = expression(h(t)),
        xlab = "Tempo (dias)")
   lines(hh_exp/max(hh_exp), col = "blue")
-  lines(hh_weib/max(hh_weib), col = "green")
-  lines(hh_gamma/max(hh_gamma), col = "purple")
+  lines(hh_weib/max(hh_weib[-1]), col = "green")
+  lines(hh_gamma/max(hh_gamma[-1]), col = "purple")
   lines(hh_lnorm/max(hh_lnorm), col = "yellow")
-  lines(hh_llog/max(hh_llog), col = "orange")
+  lines(hh_llog/max(hh_llog[-1]), col = "orange")
   lines(hh_gomp/max(hh_gomp), col = "red")
-  lines(hh_ggamma/max(hh_gamma), col = "darkgreen")
+  lines(hh_ggamma/max(hh_ggamma), col = "darkgreen")
+  
+  # Adição das informações ao data frame
+  df_survival <- rbind(df_survival,
+                       data.frame(Modelo = c("Exponencial", "Gama", "Log-normal", "Log-logística", "Gompertz", "Weibull","Gama Generalizada"),
+                                  AIC = c(aic_exp, aic_gamma, aic_lnorm, aic_llog, aic_gomp, aic_weib,aic_ggamma),
+                                  BIC = c(bic_exp, bic_gamma, bic_lnorm, bic_llog, bic_gomp, bic_weib,bic_ggamma)))
+  #pander(df_survival)
 }
 
-par(mfrow = c(1, 1))
 
-plot(1:7, type = "n", xlab = "", ylab = "", xlim = c(0, 1), ylim = c(0, 1),
-     bty = 'n', axes = F)
-
-legend("center", paste(c('Exponencial', 'Weibull', 'Gamma', 'Log Normal',
-  'Log Logistica', 'Gompertz', 'Gama Generalizada')), lwd=2,
-  col=c("blue", "green", "purple", "yellow", "orange", "red", "darkgreen"), bty='o')
 
 # knitr::kable(lognormal_fit$res.t,align = "c")
 ```
 
+```{r fig.width=16, fig.height=2.5}
+par(mfrow = c(1, 1))
 
------------------------------
-    Modelo       AIC    BIC  
---------------- ------ ------
-  Exponencial    5955   5969 
+plot(1:1, type = "n", xlab = "", ylab = "", xlim = c(0, 1), ylim = c(0, 1),
+     bty = 'n', axes = F)
 
-     Gama        5576   5595 
+legend("center", paste(c('Exponencial', 'Weibull', 'Gamma', 'Log Normal',
+  'Log Logistica', 'Gompertz', 'Gama Generalizada')), lwd=9,
+  col=c("blue", "green", "purple", "yellow", "orange", "red", "darkgreen"), bty='o',ncol = 7, cex = 1)
+```
 
-  Log-normal     5427   5446 
+\newpage
 
- Log-logística   5462   5481 
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{lcccccc}
+    \hline
+    Modelo & \multicolumn{2}{c}{Grupo Loco} & \multicolumn{2}{c}{Grupo Mtx} & \multicolumn{2}{c}{Grupo Hemato} \\
+    \cline{2-7}
+    & AIC & BIC & AIC & BIC & AIC & BIC \\
+    \hline
+    Exponencial & 3470 & 3474 & 1208 & 1211 & 1277 & 1280 \\
+    Gama & 3249 & 3258 & 1116 & 1122 & 1214 & 1220 \\
+    Log-normal & 3176 & 3184 & 1068 & 1074 & 1168 & 1174 \\
+    Log-logística & 3202 & 3210 & 1075 & 1081 & 1172 & 1178 \\
+    Gompertz & 3249 & 3258 & 1116 & 1122 & 1214 & 1220 \\
+    Weibull & 3228 & 3237 & 1099 & 1105 & 1198 & 1204 \\
+    Gama Generalizada & 3188 & 3201 & 1075 & 1085 & 1175 & 1184 \\
+    \hline
+  \end{tabular}
+  \caption{Tabela de Modelos com AIC e BIC para Grupos Sólido localizado, Metastático e Hematológico.}
+  \label{tab:modelos}
+\end{table}
 
-   Gompertz      5389   5408 
-
-    Weibull      5524   5543 
------------------------------
-
-Visualmente temos que a distribuição que melhor se ajustou aos dados foi a Log-Normal, podemos confirmar pela tabela de AIC e BIC, mesmo tendo algumas outras distribuições com melhores ajustes, na hora de confrontar com os dados, temos que a estimação fica inferior a da Log-Normal.
-
-
-
-
+Observando apenas o grupo Sólido localizado, visualmente temos que a distribuição que melhor se ajustou aos dados foi a Gamma, todavia nos casos do Metastático e Hematológico quem se aproxima de um melhor ajuste foi a Log-logistica. Mas ainda assim nenhum conseguiu captar ambas as funções de risco e sobrevivência de forma muito aceitável.
+Por fim, podemos ver que pacientes que apresentaram o tumor Sólido localizado tem uma expectativa de sobrevida maior do que os demais grupos de tumor, isso pode estar ligado ao fato da agressividade interna pro organismo que os tumores Metastático e Hematológico provocam, deixando um rastro infectológico por onde passam no corpo humano.
