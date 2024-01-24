@@ -7,8 +7,11 @@ DS <- data.frame(gptumor = names(dadosT),
                  Censored = sapply(dadosT, function(x) sum(x$status == 0)))
 rownames(DS) <- NULL
 
-
-
+library(survival)
+library(survminer)
+library(muhaz)
+library(parmsurvfit)
+library(flexsurv)
 
 KM <- list()
 par(mfrow = c(1, 3))
@@ -114,7 +117,7 @@ for(i in 1:3){
        xlab = "Tempo (dias)")
   lines(hh_exp/max(hh_exp), col = "blue")
   lines(hh_weib/max(hh_weib), col = "green")
-  lines(hh_gamma/max(hh_gamma), col = "purple")
+  lines(hh_gamma[2:351]/max(hh_gamma)[2:351], col = "purple")
   lines(hh_lnorm/max(hh_lnorm), col = "yellow")
   lines(hh_llog/max(hh_llog), col = "orange")
   lines(hh_gomp/max(hh_gomp), col = "red")
