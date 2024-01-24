@@ -1,7 +1,7 @@
 ---
 title: ''
 output:
-  html_document: default
+  pdf_document: default
 geometry: left = 2.5cm, right = 2cm, top = 2cm, bottom = 2cm
 fontsize: 12pt
 header-includes:
@@ -13,11 +13,12 @@ header-includes:
 - \usepackage{dcolumn}
 - \usepackage{anyfontsize}
 - \usepackage{pdflscape}
-- \usepackage[portuguese]{babel}
+# - \usepackage[portuguese]{babel}
 - \usepackage[utf8]{inputenc}
 - \newcommand{\blandscape}{\begin{landscape}}
 - \newcommand{\elandscape}{\end{landscape}}
 - \usepackage{multicol}
+
 ---
 
 ```{r setup, include=FALSE}
@@ -63,10 +64,13 @@ library(GLMsData)
 library(dplyr)
 library(tibble)
 #install.packages("DHARMa")
-require(survival)
 require(muhaz)
 require(flexsurv)
-
+library(survival)
+library(survminer)
+library(parmsurvfit)
+library(flexsurv)
+library(muhaz)
 
 panderOptions("table.split.cells", 100) #aumenta a quantidades de carcteres permitidos em uma celula da tabela "pander" 
 pander::panderOptions('table.split.table', 300)
@@ -92,13 +96,13 @@ titulo = "ESTUDO SOBRE OS PACIENTES COM CÂNCER INTERNADOS NA UTI DO INCA"
 ```{r echo=FALSE, child='capa.Rmd'}
 ```
 
+<!-- \newpage -->
+
+<!-- \tableofcontents -->
+
 \newpage
 
-\tableofcontents
-
-\newpage
-
-Os dados que utilizaremos são proveninentes de um grupo de 862 pacientes com câncer internados na Unidade de Terapia Intensiva (UTI) do Instituto Nacional de Câncer (INCA), estudados por um período de 182 dias, publicado por Soares e cols. (2006). As variáveis presentes são:
+  Os dados que utilizaremos são proveninentes de um grupo de 862 pacientes com câncer internados na Unidade de Terapia Intensiva (UTI) do Instituto Nacional de Câncer (INCA), estudados por um período de 182 dias, publicado por Soares e cols. (2006). As variáveis presentes são:
 
  - id: identificação do paciente;
  - tempo: a partir do primeiro caso, acompanhado em dias;
@@ -192,66 +196,125 @@ Metastático|92.77064|8.885816|75.35476|110.18652|18
 Hematológico|74.68333|6.817624|61.32104|88.04563|19.5
 Completo|160.7074|7.194252|146.6069|174.8079|62
 
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.show='hide'}
 
-# CONCLUSÃO
+dadosT <- split(dados, dados$gptumor)
 
 
-## Análise de deviance
+DS <- data.frame(gptumor = names(dadosT),
+                 N = sapply(dadosT, nrow),
+                 Failures = sapply(dadosT, function(x) sum(x$status == 1)),
+                 Censored = sapply(dadosT, function(x) sum(x$status == 0)))
+rownames(DS) <- NULL
 
-```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5}
 
-# Modelos para comparação
-lognormal_fit = flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "lognormal")
 
-################################ DEF analisar_residuos ############################################
-analisar_residuos <- function(ajuste, dados, distribuicao) {
-  # Laço de iteração para calcular estimativas e gerar resíduos simulados
-  s <- c()
+
+KM <- list()
+par(mfrow = c(1, 3))
+for(i in 1:3){
+  KM[[i]] <- survfit(Surv(tempo, status) ~ 1, data = dadosT[[i]])
   
-  for(i in 1:nrow(dados)) {
-    s[i] <- summary(ajuste, type='survival', t=dados$tempo[i], newdata=dados[i,], tidy=TRUE)$est
-    #if(i %% 10 == 0) print(i)
-  }
-  
-  # Geração de resíduos simulados
-  a <- runif(length(s), min=0, max=s)
-  r <- ifelse(dados$status == 1, qnorm(s), qnorm(a))
-  
-  # Geração do gráfico HNP
-  Grap = hnp(r, plot.sim = F, main = paste("HNP"), halfnormal = F)
-  G <- with(Grap, data.frame(x, lower, upper, median, residuals))
-  
-  grafico_hnp <- ggplot(data = G, aes(x)) +
-    geom_point(aes(y = residuals), color = "black", shape = 1) +
-    geom_line(aes(y = lower), color = "black") +
-    geom_line(aes(y = upper), color = "black") +
-    geom_line(aes(y = median), color = "black", linetype = "dashed") + 
-    ylab("Resíduos") +
-    xlab("Quantis Teóricos") +
-    ggtitle(paste0("HNP"," - ",distribuicao)) + 
-    theme_minimal() +
-    theme_bw() +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
-          panel.border = element_rect(color = "black", fill = NA, size = 1))
-  print(grafico_hnp)
-  
+  plot(KM[[i]], mark.time = T, conf.int = T, col = "red",
+       xlim = c(0, 35),
+       main = paste0(names(dadosT)[i], " (n = ", nrow(dadosT[[i]]), ")"),
+       ylab = expression(S(t)),
+       xlab = "Tempo (dias)")
+  text(x = 25, y = 0.9, paste0("Media = ", round(sum(summary(KM[[i]])$surv), 2), "\n",
+                               "Mediana = ", surv_median(KM[[i]])$median))
 }
 
-#########################################################################################
-
-nomes <- c("Log-normal")
-modelos <- list(lognormal_fit)
-
-for (i in 1:length(nomes)) {
-  analisar_residuos(modelos[[i]], dados, nomes[i])
+RF <- list()
+par(mfrow = c(1, 3))
+for(i in 1:3){
+  RF[[i]] <- muhaz(dadosT[[i]]$tempo, dadosT[[i]]$status, bw.method='local', b.cor='both',
+                   min.time = 1, max.time = 182)
+  
+  plot(RF[[i]], col = "red",
+       main = paste0(names(dadosT)[i], " (n = ", nrow(dadosT[[i]]), ")"),
+       ylab = expression(h(t)),
+       xlab = "Tempo (dias)")
 }
-
-
-
-knitr::kable(lognormal_fit$res.t,align = "c")
 ```
 
 
+# Modelos
+```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5}
+tt <- seq(0, 182, 0.1)
+
+par(mfrow = c(1, 2))
+
+for(i in 1:3){
+  
+  # Exponential
+  fit_exp <- fit_data(dadosT[[i]], dist = "exp", time = "tempo", censor = "status")
+  ss_exp <- 1 - pexp(tt, fit_exp$estimate)
+  hh_exp <- dexp(tt, rate = fit_exp$estimate)
+    
+  # Weibull
+  fit_weib <- fit_data(dadosT[[i]], dist = "weibull", time = "tempo", censor = "status")
+  ss_weib <- 1 - pweibull(tt, shape = fit_weib$estimate[1], scale = fit_weib$estimate[2])
+  hh_weib <- dweibull(tt,  shape = fit_weib$estimate[1], scale = fit_weib$estimate[2])
+  
+  # Gamma
+  fit_gamma <- flexsurvreg(Surv(dadosT[[i]]$tempo, dadosT[[i]]$status) ~ 1,
+                           dist = "gamma")
+  ss_gamma <- 1 - pgamma(tt, fit_gamma$res[1], fit_gamma$res[2])
+  hh_gamma <- dgamma(tt, fit_gamma$res[1], fit_gamma$res[2])
+  
+  # Log-normal
+  fit_lnorm <- fit_data(dadosT[[i]], dist = "lnorm", time = "tempo", censor = "status")
+  ss_lnorm <- 1 - plnorm(tt, fit_lnorm$estimate[1], fit_lnorm$estimate[2])
+  hh_lnorm <- dlnorm(tt, fit_lnorm$estimate[1], fit_lnorm$estimate[2])
+  
+  # Log-logistic
+  fit_llog <- fit_data(dadosT[[i]], dist = "lnorm", time = "tempo", censor = "status")
+  ss_llog <- 1 - pllogis(tt, fit_llog$estimate[1], fit_llog$estimate[1])
+  hh_llog <- dllogis(tt, fit_llog$estimate[1], fit_llog$estimate[2])
+  
+  # Gompertz
+  fit_gomp <- flexsurvreg(Surv(dadosT[[i]]$tempo, dadosT[[i]]$status) ~ 1,
+                          dist = "gamma")
+  ss_gomp <- 1 - pgompertz(tt, fit_gomp$res[1], fit_gomp$res[2])
+  hh_gomp <- dgompertz(tt, fit_gomp$res[1], fit_gomp$res[2])
+  
+  # Generalized Gama
+  fit_ggamma <- flexsurvreg(Surv(dadosT[[i]]$tempo, dadosT[[i]]$status) ~ 1,
+                            dist = "gengamma.orig")
+  ss_ggamma <- 1 - pgengamma.orig(tt, fit_ggamma$res[1], fit_ggamma$res[2], fit_ggamma$res[3])
+  hh_ggamma <- dgengamma.orig(tt, fit_ggamma$res[1], fit_ggamma$res[2], fit_ggamma$res[3])
+  
+  # Plot survival function
+  plot(KM[[i]], mark.time = F, conf.int = F, col = "black",
+       xlim = c(0, 182),
+       main = paste0(names(dadosT)[i]),
+       ylab = expression(S(t)),
+       xlab = "Tempo (dias)")
+  lines(ss_exp, col = "blue")
+  lines(ss_weib, col = "green")
+  lines(ss_gamma, col = "purple")
+  lines(ss_lnorm, col = "yellow")
+  lines(ss_llog, col = "orange")
+  lines(ss_gomp, col = "red")
+  lines(ss_ggamma, col = "darkgreen")
+  
+  # Plot hazard function
+  plot(RF[[i]]$haz.est/max(RF[[i]]$haz.est), type = "l",
+       col = "black", ylim = c(0, 1),
+       main = paste0(names(dadosT)[i]),
+       ylab = expression(h(t)),
+       xlab = "Tempo (dias)")
+  lines(hh_exp/max(hh_exp), col = "blue")
+  lines(hh_weib/max(hh_weib), col = "green")
+  lines(hh_gamma/max(hh_gamma), col = "purple")
+  lines(hh_lnorm/max(hh_lnorm), col = "yellow")
+  lines(hh_llog/max(hh_llog), col = "orange")
+  lines(hh_gomp/max(hh_gomp), col = "red")
+  lines(hh_ggamma/max(hh_gamma), col = "darkgreen")
+}
+
+# knitr::kable(lognormal_fit$res.t,align = "c")
+```
 
 
 -----------------------------
@@ -269,4 +332,8 @@ knitr::kable(lognormal_fit$res.t,align = "c")
 
     Weibull      5524   5543 
 -----------------------------
+
+Visualmente temos que o modelo que melhor se ajustou aos dados foi o em linha amarela, referente a distribuição Log-Normal, podemos conferir pelo AIC e BIC, que esta esta apresentando um dos valores mais aceitaveis, ficando atrás apenas da Gompertz (laranja), mas esta esta com uma estimação pior para as funções.
+
+
 

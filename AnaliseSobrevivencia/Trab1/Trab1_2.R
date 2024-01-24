@@ -8,8 +8,7 @@ DS <- data.frame(gptumor = names(dadosT),
 rownames(DS) <- NULL
 
 
-library(survival)
-library(survminer)
+
 
 KM <- list()
 par(mfrow = c(1, 3))
@@ -26,10 +25,10 @@ for(i in 1:3){
 }
 
 # Estimate hazard function
-library(muhaz)
+
 
 RF <- list()
-par(mfrow = c(2, 4))
+par(mfrow = c(1, 3))
 for(i in 1:3){
   RF[[i]] <- muhaz(dadosT[[i]]$tempo, dadosT[[i]]$status, bw.method='local', b.cor='both',
                    min.time = 1, max.time = 182)
@@ -45,10 +44,11 @@ for(i in 1:3){
 
 ### (c) Fit parametric models:
 # Exponential, Gamma, Log-normal, Log-logistic, Gompertz, others
-library(parmsurvfit)
-library(flexsurv)
 
-tt <- seq(0, 35, 0.1)
+
+dadosT <- split(dados, dados$gptumor)
+
+tt <- seq(0, 182, 0.1)
 
 par(mfrow = c(1, 2))
 
@@ -58,7 +58,7 @@ for(i in 1:3){
   fit_exp <- fit_data(dadosT[[i]], dist = "exp", time = "tempo", censor = "status")
   ss_exp <- 1 - pexp(tt, fit_exp$estimate)
   hh_exp <- dexp(tt, rate = fit_exp$estimate)
-  
+    
   # Weibull
   fit_weib <- fit_data(dadosT[[i]], dist = "weibull", time = "tempo", censor = "status")
   ss_weib <- 1 - pweibull(tt, shape = fit_weib$estimate[1], scale = fit_weib$estimate[2])
@@ -94,7 +94,7 @@ for(i in 1:3){
   
   # Plot survival function
   plot(KM[[i]], mark.time = F, conf.int = F, col = "black",
-       xlim = c(0, 35),
+       xlim = c(0, 182),
        main = paste0(names(dadosT)[i]),
        ylab = expression(S(t)),
        xlab = "Tempo (dias)")
