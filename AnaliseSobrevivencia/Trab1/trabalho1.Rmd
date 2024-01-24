@@ -39,8 +39,6 @@ options(htmltools.dir.version = FALSE)
 # unlink(".RData", recursive = TRUE)
 # tinytex::tlmgr_repo()
 
-
-
 library(ggplot2)
 library(dplyr)
 library(corrplot)
@@ -156,12 +154,17 @@ plot(km2, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
 lines(km3, mark.time=T, conf.int=F, lwd=2, col=3)
 lines(km4, mark.time=T, conf.int=F, lwd=2, col=2)
 lines(km1, mark.time=T, conf.int=F, lwd=2, col=1)
+
+# abline(v = 183, col = 4, lwd = 2, lty = 2)
+abline(v = 18, col = 3, lwd = 2, lty = 2)
+abline(v = 20, col = 2, lwd = 2, lty = 2)
+abline(v = 62, col = 1, lwd = 2, lty = 2)
+
 legend(130,0.95, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
                          'Completo')), lwd=2, col=4:1, bty='o')
 ```
 
-A figura acima, referente a função de sobrevivência nos mostra o tempo de sobrevida relacionado com a problabilidade de sobrevida estimada, ou seja, separando pelo tipo de tumor (gptumor), temos que o sólido localizado (Loco) está acima dos demais, isto nos da indícios de que quem desenvolveu apenas este tumor, tem uma sobrevida maior que quem tem os outros dois tipos de tumores. Note-se também que o Loco influencia no Completo, este que se refere aos dados totais.
-
+A figura acima, referente a função de sobrevivência nos mostra o tempo de sobrevida relacionado com a problabilidade de sobrevida estimada, separando pelo tipo de tumor (gptumor), temos que o sólido localizado (Loco) está acima dos demais, isto nos da indícios de que quem desenvolveu apenas este tumor, tem uma sobrevida maior que quem tem os outros dois tipos de tumores. Note-se também que o sólido influencia no Completo, este que se refere aos dados totais. Destaca-se neste grafico as medianas também, note que como podemos confirmar, o metastático e o hematológico apresentam tempos de sobrevida menor nesste estudo, no caso do sólido, temos que sua mediana não esta presente pelo fato da maioria dos pacientes não terem vindo a óbito durante o estudo.
 
 ```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5}
 h0 <- muhaz(dados1$tempo, dados1$status, min.time = 1, max.time = 182)
@@ -185,16 +188,16 @@ legend(130,0.025, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
                          'Completo')), lwd=2, col=4:1, bty='o')
 ```
 
-Temos na figura acima um gráfico referente a função de risco, que as informações batem com a função de sobrevivência, tendo os pacientes com um tumor sólido localizado com um tempo de sobrevida maior que os demais tumores.
+Temos na figura acima um gráfico referente a função de risco, com este temos que uma confirmação com a função de sobrevivência, tendo os pacientes com um tumor sólido localizado com um tempo de sobrevida maior que os demais tumores. Esses ocorrendo um número maior de óbito nos primeiros 50 dias de acompanhamento.
 
-Observando agora as medidas de tendência central junto do desvio padrão e intervalo de confiância, temos uma confirmação do quee ja estavamos vendo anteriormente, aonde o Sólido localizado esta com uma sobrevida maior, isto extende-se ainda ao fato de sua mediana estar acima do total de dias que o experimento correu.
+A seguir, estaremos realizando alguns ajustes de modelos paramétricos.
 
-Dados|Media|DP|IC Inferior|IC Superior|Mediana
----------|-------|-------------|---------|-------|-------------
-Sólido localizado|226.3667|13.77624|199.3657|253.3676|182+
-Metastático|92.77064|8.885816|75.35476|110.18652|18
-Hematológico|74.68333|6.817624|61.32104|88.04563|19.5
-Completo|160.7074|7.194252|146.6069|174.8079|62
+<!-- Dados|Media|DP|IC Inferior|IC Superior|Mediana -->
+<!-- ---------|-------|-------------|---------|-------|------------- -->
+<!-- Sólido localizado|226.3667|13.77624|199.3657|253.3676|182+ -->
+<!-- Metastático|92.77064|8.885816|75.35476|110.18652|18 -->
+<!-- Hematológico|74.68333|6.817624|61.32104|88.04563|19.5 -->
+<!-- Completo|160.7074|7.194252|146.6069|174.8079|62 -->
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.show='hide'}
 
@@ -237,12 +240,12 @@ for(i in 1:3){
 }
 ```
 
-
-# Modelos
 ```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5}
 tt <- seq(0, 182, 0.1)
 
 par(mfrow = c(1, 2))
+
+nomesTumor <- c("Sólido localizado", 'Metastático', 'Hematológico')
 
 for(i in 1:3){
   
@@ -287,7 +290,7 @@ for(i in 1:3){
   # Plot survival function
   plot(KM[[i]], mark.time = F, conf.int = F, col = "black",
        xlim = c(0, 182),
-       main = paste0(names(dadosT)[i]),
+       main = paste0(nomesTumor[i]),
        ylab = expression(S(t)),
        xlab = "Tempo (dias)")
   lines(ss_exp, col = "blue")
@@ -301,7 +304,7 @@ for(i in 1:3){
   # Plot hazard function
   plot(RF[[i]]$haz.est/max(RF[[i]]$haz.est), type = "l",
        col = "black", ylim = c(0, 1),
-       main = paste0(names(dadosT)[i]),
+       main = paste0(nomesTumor[i]),
        ylab = expression(h(t)),
        xlab = "Tempo (dias)")
   lines(hh_exp/max(hh_exp), col = "blue")
@@ -312,6 +315,15 @@ for(i in 1:3){
   lines(hh_gomp/max(hh_gomp), col = "red")
   lines(hh_ggamma/max(hh_gamma), col = "darkgreen")
 }
+
+par(mfrow = c(1, 1))
+
+plot(1:7, type = "n", xlab = "", ylab = "", xlim = c(0, 1), ylim = c(0, 1),
+     bty = 'n', axes = F)
+
+legend("center", paste(c('Exponencial', 'Weibull', 'Gamma', 'Log Normal',
+  'Log Logistica', 'Gompertz', 'Gama Generalizada')), lwd=2,
+  col=c("blue", "green", "purple", "yellow", "orange", "red", "darkgreen"), bty='o')
 
 # knitr::kable(lognormal_fit$res.t,align = "c")
 ```
@@ -333,7 +345,8 @@ for(i in 1:3){
     Weibull      5524   5543 
 -----------------------------
 
-Visualmente temos que o modelo que melhor se ajustou aos dados foi o em linha amarela, referente a distribuição Log-Normal, podemos conferir pelo AIC e BIC, que esta esta apresentando um dos valores mais aceitaveis, ficando atrás apenas da Gompertz (laranja), mas esta esta com uma estimação pior para as funções.
+Visualmente temos que a distribuição que melhor se ajustou aos dados foi a Log-Normal, podemos confirmar pela tabela de AIC e BIC, mesmo tendo algumas outras distribuições com melhores ajustes, na hora de confrontar com os dados, temos que a estimação fica inferior a da Log-Normal.
+
 
 
 
