@@ -1,3 +1,4 @@
+# setwd('./Modelos mistos/Parte I/dados')
 load("Galwey-tab1-1.RData")
 psych::headTail(dat, top = 5, bottom = 5)
 
@@ -33,9 +34,11 @@ options(digits = 5)
 pred<- predict(fm1.me, level = 0:1)  ;pred[1:10, ]
 
 
-
+# Estimativa da parte fixa do modelo, no lm4 isto nao funciona, e diferente
 (tb<- summary(fm1.me)$tTable)
 
+
+# Residuos ----------------------------------------------------------------
 
 
 RE.resp<- residuals(fm1.me, type = "response", level = 0:1); RE.resp[1:10,]
@@ -71,7 +74,8 @@ plot(pred[,3], RE.nor[,2], ylim = c(-3.5,3.5), xlab = expression(hat(y) ~ " - mo
 abline(h=c(-3,-2,0,2,3), col=c(3,2,1,2,3),lty=2)
 layout(1)
 
-
+library(predictmeans) 
+residplot(fm1.me, id = T, newwd = F) ### Forma pratica de ver residuo
 
 
 par(mfrow=c(1,3))
@@ -91,6 +95,9 @@ hnp(RE.per[,2], halfnormal = FALSE)
 
 plot(fm1.me)
 
+
+
+# Matrizes importantes ----------------------------------------------------
 
 # Matrizes importantes, considerando a cidade de Chichester: 
  

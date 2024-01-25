@@ -1,4 +1,3 @@
-
 # data set
 # https://www2.compute.dtu.dk/courses/02429/Data/
 
@@ -19,7 +18,7 @@ with(planks, interaction.plot(width,plank,humidity,legend=F,col=hsv(1:20/20)))
 with(planks, interaction.plot(depth,plank,humidity,legend=F,col=hsv(1:20/20)))
 with(planks, interaction.plot(width,depth,humidity,legend=T,col=hsv(1:5/5), lwd=2))
 with(planks, interaction.plot(depth,width,humidity,legend=T,col=hsv(1:3/3), lwd=2))
-par(op)
+# par(op)
 
 
 
