@@ -133,7 +133,7 @@ model4.o<-lmer(humidity ~ depth*width + (1|plank) + (1|depth:plank)
 model4<-lmer(loghum ~ depth*width + (1|plank) + (1|depth:plank)
              + (1|plank:width), data = planks)
 
-
+summary(model4)
 
 # diagnóstico do modelo
 library(predictmeans)
