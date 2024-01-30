@@ -12,6 +12,7 @@ library(survminer)
 library(muhaz)
 library(parmsurvfit)
 library(flexsurv)
+require(autoReg)
 
 KM <- list()
 par(mfrow = c(1, 3))

@@ -10,6 +10,8 @@ require(pander)
 require(flexsurv)
 require(hnp)
 require(ggplot2)
+require(survminer)
+require(parmsurvfit)
 
 # Traducao dos dados ------------------------------------------------------
 dados$sexo <- ifelse(dados$sexo == "Male","Mas","Fem")
@@ -134,149 +136,200 @@ print(c('Completo', 62, 'Sólido localizado', NA,
 
 # Modelos parametricos ----------------------------------------------------
 
+dadosT <- split(dados, dados$gptumor)
 
-# Modelos para comparação
-exp_fit = flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "exponential")
+DS <- data.frame(gptumor = names(dadosT),
+                 N = sapply(dadosT, nrow),
+                 Failures = sapply(dadosT, function(x) sum(x$status == 1)),
+                 Censored = sapply(dadosT, function(x) sum(x$status == 0)))
+rownames(DS) <- NULL
 
-gama_fit = flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "gamma")
-
-lognormal_fit = flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "lognormal")
-
-loglogistic_fit = flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "llogis")
-
-gompertz_fit = flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "gompertz")
-
-weibull_fit = flexsurvreg(Surv(tempo, status) ~ gptumor, data = dados, dist = "weibull")
-
-################################ DEF analisar_residuos ############################################
-analisar_residuos <- function(ajuste, dados, distribuicao) {
-  # Laço de iteração para calcular estimativas e gerar resíduos simulados
-  s <- c()
+KM <- list()
+par(mfrow = c(1, 3))
+for(i in 1:3){
+  KM[[i]] <- survfit(Surv(tempo, status) ~ 1, data = dadosT[[i]])
   
-  for(i in 1:nrow(dados)) {
-    s[i] <- summary(ajuste, type='survival', t=dados$tempo[i], newdata=dados[i,], tidy=TRUE)$est
-    #if(i %% 10 == 0) print(i)
-  }
-  
-  # Geração de resíduos simulados
-  a <- runif(length(s), min=0, max=s)
-  r <- ifelse(dados$status == 1, qnorm(s), qnorm(a))
-  
-  # Geração do gráfico HNP
-  Grap = hnp(r, plot.sim = F, main = paste("HNP"), halfnormal = F)
-  G <- with(Grap, data.frame(x, lower, upper, median, residuals))
-  
-  grafico_hnp <- ggplot(data = G, aes(x)) +
-    geom_point(aes(y = residuals), color = "black", shape = 1) +
-    geom_line(aes(y = lower), color = "black") +
-    geom_line(aes(y = upper), color = "black") +
-    geom_line(aes(y = median), color = "black", linetype = "dashed") + 
-    ylab("Resíduos") +
-    xlab("Quantis Teóricos") +
-    ggtitle(paste0("HNP"," - ",distribuicao)) + 
-    theme_minimal() +
-    theme_bw() +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
-          panel.border = element_rect(color = "black", fill = NA, size = 1))
-  print(paste0("HNP"," - ",distribuicao,"\n"))
-  print(grafico_hnp)
-  
+  plot(KM[[i]], mark.time = T, conf.int = T, col = "red",
+       xlim = c(0, 35),
+       main = paste0(names(dadosT)[i], " (n = ", nrow(dadosT[[i]]), ")"),
+       ylab = expression(S(t)),
+       xlab = "Tempo (dias)")
+  text(x = 25, y = 0.9, paste0("Media = ", round(sum(summary(KM[[i]])$surv), 2), "\n",
+                               "Mediana = ", surv_median(KM[[i]])$median))
 }
 
-#########################################################################################
+# Estimate hazard function
 
-nomes <- c("Exponencial", "Gama", "Log-normal", "Log-logística", "Gompertz", "Weibull")
-modelos <- list(exp_fit, gama_fit, lognormal_fit, loglogistic_fit, gompertz_fit, weibull_fit)
 
-for (i in 1:length(nomes)) {
-  analisar_residuos(modelos[[i]], dados, nomes[i])
+RF <- list()
+par(mfrow = c(1, 3))
+for(i in 1:3){
+  RF[[i]] <- muhaz(dadosT[[i]]$tempo, dadosT[[i]]$status, bw.method='local', b.cor='both',
+                   min.time = 1, max.time = 182)
+  
+  plot(RF[[i]], col = "red",
+       main = paste0(names(dadosT)[i], " (n = ", nrow(dadosT[[i]]), ")"),
+       ylab = expression(h(t)),
+       xlab = "Tempo (dias)")
 }
 
+# Estimate mean and median survival time
 
-######### TABELA AIC BIC #######################################
-comparar_modelos <- function(lista_de_modelos, nomes_modelos) {
-  # Verifica se o comprimento de nomes_modelos é igual ao comprimento da lista_de_modelos
-  if (length(nomes_modelos) != length(lista_de_modelos)) {
-    stop("O número de nomes de modelos não corresponde ao número de modelos na lista.")
-  }
+
+### (c) Fit parametric models:
+# Exponential, Gamma, Log-normal, Log-logistic, Gompertz, others
+
+
+dadosT <- split(dados, dados$gptumor)
+
+tt <- seq(0, 182, 0.1)
+
+par(mfrow = c(1, 2))
+
+nomesTumor <- c("Sólido localizado", 'Metastático', 'Hematológico')
+
+df_survival <- data.frame(Modelo = character(0), AIC = numeric(0), BIC = numeric(0))
+
+for(i in 1:3){
   
-  # Inicializa um data frame vazio
-  resultados <- data.frame(Modelo = character(), AIC = numeric(), BIC = numeric(), stringsAsFactors = FALSE)
+  # Exponential
+  fit_exp <- fit_data(dadosT[[i]], dist = "exp", time = "tempo", censor = "status")
+  ss_exp <- 1 - pexp(tt, fit_exp$estimate)
+  hh_exp <- dexp(tt, rate = fit_exp$estimate)/ss_exp
+  aic_exp <- summary(fit_exp)$aic
+  bic_exp <- summary(fit_exp)$bic
   
-  # Loop sobre a lista de modelos
-  for (i in seq_along(lista_de_modelos)) {
-    modelo <- lista_de_modelos[[i]]
-    
-    # Calcula AIC e BIC
-    aic_valor <- AIC(modelo)
-    bic_valor <- BIC(modelo)
-    
-    # Adiciona os resultados ao data frame
-    resultados <- rbind(resultados, data.frame(Modelo = nomes_modelos[i], AIC = aic_valor, BIC = bic_valor))
-  }
+  # Weibull
+  fit_weib <- fit_data(dadosT[[i]], dist = "weibull", time = "tempo", censor = "status")
+  ss_weib <- 1 - pweibull(tt, shape = fit_weib$estimate[1], scale = fit_weib$estimate[2])
+  hh_weib <- dweibull(tt,  shape = fit_weib$estimate[1], scale = fit_weib$estimate[2])/ss_weib
+  aic_weib <- summary(fit_weib)$aic
+  bic_weib <- summary(fit_weib)$bic
   
-  # Retorna a tabela de resultados
-  return(resultados)
+  # Gamma
+  fit_gamma <- flexsurvreg(Surv(dadosT[[i]]$tempo, dadosT[[i]]$status) ~ 1,
+                           dist = "gamma")
+  ss_gamma <- 1 - pgamma(tt, fit_gamma$res[1], fit_gamma$res[2])
+  hh_gamma <- dgamma(tt, fit_gamma$res[1], fit_gamma$res[2])/ss_gamma
+  aic_gamma <- AIC(fit_gamma)
+  bic_gamma <- BIC(fit_gamma)
+  
+  # Log-normal
+  fit_lnorm <- fit_data(dadosT[[i]], dist = "lnorm", time = "tempo", censor = "status")
+  ss_lnorm <- 1 - plnorm(tt, fit_lnorm$estimate[1], fit_lnorm$estimate[2])
+  hh_lnorm <- dlnorm(tt, fit_lnorm$estimate[1], fit_lnorm$estimate[2])/ss_lnorm
+  aic_lnorm <- summary(fit_lnorm)$aic
+  bic_lnorm <- summary(fit_lnorm)$bic
+  
+  # Log-logistic
+  fit_llog <- fit_data(dadosT[[i]], dist = "llogis", time = "tempo", censor = "status")
+  ss_llog <- 1 - pllogis(tt, fit_llog$estimate[1], fit_llog$estimate[1])
+  hh_llog <- dllogis(tt, fit_llog$estimate[1], fit_llog$estimate[2])/ss_llog
+  aic_llog <- summary(fit_llog)$aic
+  bic_llog <- summary(fit_llog)$bic
+  
+  # Gompertz
+  fit_gomp <- flexsurvreg(Surv(dadosT[[i]]$tempo, dadosT[[i]]$status) ~ 1,
+                          dist = "gamma")
+  ss_gomp <- 1 - pgompertz(tt, fit_gomp$res[1], fit_gomp$res[2])
+  hh_gomp <- dgompertz(tt, fit_gomp$res[1], fit_gomp$res[2])/ss_gomp
+  aic_gomp <- AIC(fit_gomp)
+  bic_gomp <- BIC(fit_gomp)
+  
+  # Generalized Gama
+  fit_ggamma <- flexsurvreg(Surv(dadosT[[i]]$tempo, dadosT[[i]]$status) ~ 1,
+                            dist = "gengamma.orig")
+  ss_ggamma <- 1 - pgengamma.orig(tt, fit_ggamma$res[1], fit_ggamma$res[2], fit_ggamma$res[3])
+  hh_ggamma <- dgengamma.orig(tt, fit_ggamma$res[1], fit_ggamma$res[2], fit_ggamma$res[3])/ss_gamma
+  aic_ggamma <- AIC(fit_ggamma)
+  bic_ggamma <- BIC(fit_ggamma)
+  
+  # Plot survival function
+  plot(KM[[i]], mark.time = F, conf.int = F, col = "black",
+       xlim = c(0, 182),
+       main = paste0(nomesTumor[i]),
+       ylab = expression(S(t)),
+       xlab = "Tempo (dias)")
+  lines(ss_exp ~ tt, col = "blue")
+  lines(ss_weib ~ tt, col = "green")
+  lines(ss_gamma ~ tt, col = "purple")
+  lines(ss_lnorm ~ tt, col = "yellow")
+  lines(ss_llog ~ tt, col = "orange")
+  lines(ss_gomp ~ tt, col = "red")
+  lines(ss_ggamma ~ tt, col = "darkgreen")
+  
+  # Plot hazard function
+  plot(RF[[i]]$haz.est, type = "l",
+       col = "black",
+       #ylim = c(0, 1),
+       main = paste0(nomesTumor[i]),
+       ylab = expression(h(t)),
+       xlab = "Tempo (dias)")
+  lines(hh_exp[-1] ~ tt[-1], col = "blue")
+  lines(hh_weib[-1] ~ tt[-1], col = "green")
+  lines(hh_gamma[-1] ~ tt[-1], col = "purple")
+  lines(hh_lnorm[-1] ~ tt[-1], col = "yellow")
+  lines(hh_llog[-1] ~ tt[-1], col = "orange")
+  lines(hh_gomp[-1] ~ tt[-1], col = "red")
+  lines(hh_ggamma[-1] ~ tt[-1], col = "darkgreen")
+  
+  # Adição das informações ao data frame
+  df_survival <- rbind(df_survival,
+                       data.frame(Modelo = c("Exponencial", "Gama", "Log-normal", "Log-logística", "Gompertz", "Weibull","Gama Generalizada"),
+                                  AIC = c(aic_exp, aic_gamma, aic_lnorm, aic_llog, aic_gomp, aic_weib,aic_ggamma),
+                                  BIC = c(bic_exp, bic_gamma, bic_lnorm, bic_llog, bic_gomp, bic_weib,bic_ggamma)))
+  #pander(df_survival)
 }
 
-#######################################################################
-
-# USO
-nomes <- c("Exponencial", "Gama", "Log-normal", "Log-logística", "Gompertz", "Weibull")
-modelos <- list(exp_fit, gama_fit, lognormal_fit, loglogistic_fit, gompertz_fit, weibull_fit)
-
-tabela_resultados <- comparar_modelos(modelos, nomes)
-pander(tabela_resultados)
-
-# Selecao do modelo -------------------------------------------------------
-
-knitr::kable(gompertz_fit$res.t,align = "c")
-
-
-
-summary(gompertz_fit)
-coef(gompertz_fit)
-
-a <- summary(gompertz_fit)
 # Interpretacao ----------------------------------------------------------
 
-Loco_gom <- a$`gptumor=Loco`
-Hemato_gom <- a$`gptumor=Hemato`
-Mtx_gom <- a$`gptumor=Mtx`
+# Loco_gom <- a$`gptumor=Loco`
+# Hemato_gom <- a$`gptumor=Hemato`
+# Mtx_gom <- a$`gptumor=Mtx`
+# # 
+# # ###### summary(gompertz_fit)$ aplicar
+# # 
+# # h1 <- muhaz(Loco$tempo, Loco$status, min.time = 1, max.time = 182)
+# # 
+# # h2 <- muhaz(Hemato$tempo, Hemato$status, min.time = 1, max.time = 182)
+# # 
+# # h3 <- muhaz(Mtx$tempo, Mtx$status, min.time = 1, max.time = 182)
+# # 
+# # # Graficos
+# # plot(h1, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
+# #      ylab='Função de Risco Estimada')
+# # lines(h3, mark.time=T, conf.int=F, lwd=2, col=2)
+# # lines(h2, mark.time=T, conf.int=F, lwd=2, col=3)
+# # lines(h0, mark.time=T, conf.int=F, lwd=2, col=4)
+# # legend(130,0.025, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
+# #                           'Completo')), lwd=2, col=1:4, bty='o')
 # 
-# ###### summary(gompertz_fit)$ aplicar
+# plot(km2, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
+#      ylab='Prob. de sobrevida estimada', col = 4)
+# lines(km3, mark.time=T, conf.int=F, lwd=2, col=3)
+# lines(km4, mark.time=T, conf.int=F, lwd=2, col=2)
+# legend(100,1, paste(c('Sólido localizado', 'Metastático',
+#                       'Hematológico')), lwd=1, col=4:2, bty='o')
 # 
-# h1 <- muhaz(Loco$tempo, Loco$status, min.time = 1, max.time = 182)
+# lines(Loco_gom$time,Loco_gom$est, lty = 2, col = 4, lwd = 2)
+# lines(Hemato_gom$time,Hemato_gom$est, lty = 2, col = 2, lwd = 2)
+# lines(Mtx_gom$time,Mtx_gom$est, lty = 2, col = 3, lwd = 2)
 # 
-# h2 <- muhaz(Hemato$tempo, Hemato$status, min.time = 1, max.time = 182)
+# ####################
+# # a <- 1 - plnorm(1:182, lognormal_fit$res[1], lognormal_fit$res[2])
+# # plot(a)
 # 
-# h3 <- muhaz(Mtx$tempo, Mtx$status, min.time = 1, max.time = 182)
+# loco_a <- 1 - pgompertz(1:182, shape = -0.02722, rate = 0.01851)## Fazer com decimal
 # 
-# # Graficos
-# plot(h1, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
-#      ylab='Função de Risco Estimada')
-# lines(h3, mark.time=T, conf.int=F, lwd=2, col=2)
-# lines(h2, mark.time=T, conf.int=F, lwd=2, col=3)
-# lines(h0, mark.time=T, conf.int=F, lwd=2, col=4)
-# legend(130,0.025, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
-#                           'Completo')), lwd=2, col=1:4, bty='o')
-
-plot(km2, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
-     ylab='Prob. de sobrevida estimada', col = 4)
-lines(km3, mark.time=T, conf.int=F, lwd=2, col=3)
-lines(km4, mark.time=T, conf.int=F, lwd=2, col=2)
-legend(100,1, paste(c('Sólido localizado', 'Metastático',
-                      'Hematológico')), lwd=1, col=4:2, bty='o')
-
-lines(Loco_gom$time,Loco_gom$est, lty = 2, col = 4, lwd = 2)
-lines(Hemato_gom$time,Hemato_gom$est, lty = 2, col = 2, lwd = 2)
-lines(Mtx_gom$time,Mtx_gom$est, lty = 2, col = 3, lwd = 2)
-
-####################
-# a <- 1 - plnorm(1:182, lognormal_fit$res[1], lognormal_fit$res[2])
+# 
 # plot(a)
 
-loco_a <- 1 - pgompertz(1:182, shape = -0.02722, rate = 0.01851)## Fazer com decimal
+# Comparacao grupos -------------------------------------------------------
 
 
-plot(a)
+dados_comparar <- subset(dados1, gptumor==c('Mtx','Hemato'),
+                         select=c('tempo', 'status', 'gptumor'))
+
+Y <- Surv(dados_comparar$tempo, dados_comparar$status)
+X <- dados_comparar$gptumor
+survdiff(Y~X)
