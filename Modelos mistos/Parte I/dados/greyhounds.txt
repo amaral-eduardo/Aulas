@@ -1,0 +1,72 @@
+id; name; box; birthdate; time; distance
+2; Leprechaun Kate; 1; Jan-04 ;;515
+3; Leprechaun Kate; 1; Jan-04 ;;525
+4; Leprechaun Kate; 1; Jan-04 ;30.89; 530
+5; Leprechaun Kate; 1; Jan-04 ;31.31; 530
+6; Leprechaun Kate; 1; Jan-04 ;31.23; 530
+7; Mystifier; 2; Dec-03;; 430
+8; Mystifier; 2; Dec-03;; 450
+9; Mystifier; 2; Dec-03;; 457
+10; Mystifier; 2; Dec-03;; 457
+11; Mystifier; 2; Dec-03;; 430
+12; Mystifier; 2; Dec-03; 24.43; 410
+13; Mystifier; 2; Dec-03; 24.35; 410
+14; Mystifier; 2; Dec-03; 24.33; 410
+15; Proudly Agro; 3; Feb-03; 31.72; 530
+16; Proudly Agro; 3; Feb-03; 31.23; 530
+17; Proudly Agro; 3; Feb-03; 31.72; 530
+18; Proudly Agro; 3; Feb-03; 31.30; 530
+19; Proudly Agro; 3; Feb-03; 31.55; 530
+20; Proudly Agro; 3; Feb-03; 31.65; 530
+21; Proudly Agro; 3; Feb-03; 31.15; 530
+22; Proudly Agro; 3; Feb-03; 31.37; 530
+23; Desperado Lover; 4; Jan-02; 30.50; 509
+24; Desperado Lover; 4; Jan-02; 30.80; 509
+25; Desperado Lover; 4; Jan-02; 30.92; 509
+26; Desperado Lover; 4; Jan-02; 30.84; 509
+27; Desperado Lover; 4; Jan-02; 31.39; 509
+28; Desperado Lover; 4; Jan-02; 31.40; 530
+29; Desperado Lover; 4; Jan-02; 31.68; 530
+30; Desperado Lover; 4; Jan-02; 31.81; 530
+31; Squeaky Cheeks; 5; Nov-03; 34.82; 530
+32; Squeaky Cheeks; 5; Nov-03; 31.72; 530
+33; Squeaky Cheeks; 5; Nov-03; 32.34; 530
+34; Squeaky Cheeks; 5; Nov-03; 31.32; 530
+35; Squeaky Cheeks; 5; Nov-03; 31.85; 530
+36; Squeaky Cheeks; 5; Nov-03; 31.22; 530
+37; Squeaky Cheeks; 5; Nov-03; 31.55; 530
+38; Squeaky Cheeks; 5; Nov-03; 31.52; 530
+39; Beyond the Sea; 6; Apr-04; 31.37; 530
+40; Beyond the Sea; 6; Apr-04; 30.75; 530
+41; Keith Kaos; 7; Feb-03; 30.56; 509
+42; Keith Kaos; 7; Feb-03; 31.31; 530
+43; Keith Kaos; 7; Feb-03; 31.81; 530
+44; Keith Kaos; 7; Feb-03; 31.71; 530
+45; Keith Kaos; 7; Feb-03; 31.58; 530
+46; Keith Kaos; 7; Feb-03; 31.04; 530
+47; Keith Kaos; 7; Feb-03; 31.61; 530
+48; Keith Kaos; 7; Feb-03; 31.59; 530
+49; Elza Prince; 8; Nov-02 ;;530
+50; Elza Prince; 8; Nov-02 ;31.30; 530
+51; Elza Prince; 8; Nov-02 ;31.55; 530
+52; Elza Prince; 8; Nov-02 ;31.92; 530
+53; Elza Prince; 8; Nov-02 ;31.26; 530
+54; Elza Prince; 8; Nov-02 ;31.73; 530
+55; Elza Prince; 8; Nov-02 ;31.86; 530
+56; Elza Prince; 8; Nov-02 ;31.52; 530
+57; Jarnat Boy; 9; Apr-03 ;31.30; 530
+58; Jarnat Boy; 9; Apr-03 ;31.90; 530
+59; Jarnat Boy; 9; Apr-03 ;31.59; 530
+60; Jarnat Boy; 9; Apr-03 ;31.55; 530
+61; Jarnat Boy; 9; Apr-03 ;31.28; 530
+62; Jarnat Boy; 9; Apr-03 ;31.12; 530
+63; Jarnat Boy; 9; Apr-03 ;32.44; 530
+64; Jarnat Boy; 9; Apr-03 ;31.64; 530
+65; Shilo Mist; 10; Apr-03 ;31.71; 530
+66; Shilo Mist; 10; Apr-03 ;32.30; 530
+67; Shilo Mist; 10; Apr-03 ;31.49; 530
+68; Shilo Mist; 10; Apr-03 ;32.17; 530
+69; Shilo Mist; 10; Apr-03 ;32.14; 530
+70; Shilo Mist; 10; Apr-03 ;31.74; 530
+71; Shilo Mist; 10; Apr-03 ;31.98; 530
+72; Shilo Mist; 10; Apr-03 ;31.82; 530
