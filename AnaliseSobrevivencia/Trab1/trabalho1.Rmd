@@ -165,14 +165,13 @@ legend(130,0.95, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
 ```
 
 A figura acima, referente a função de sobrevivência nos mostra o tempo de sobrevida relacionado com a problabilidade de sobrevida estimada, separando pelo tipo de tumor (gptumor), temos que o sólido localizado (Loco) está acima dos demais, isto nos da indícios de que quem desenvolveu apenas este tumor, tem uma sobrevida maior que quem tem os outros dois tipos de tumores. Note-se também que o sólido influencia no Completo, este que se refere aos dados totais. Destaca-se neste grafico as medianas também, note que como podemos confirmar, o metastático e o hematológico apresentam tempos de sobrevida menor nesste estudo, no caso do sólido, temos que sua mediana não esta presente pelo fato da maioria dos pacientes não terem vindo a óbito durante o estudo.
-A seguir podemos observar melhor esses valores de tendência central.
-
-Dados|Media|DP|IC Inferior|IC Superior|Mediana
----------|-------|-------------|---------|-------|-------------
-Sólido localizado|226.3667|13.77624|199.3657|253.3676|182+
-Metastático|92.77064|8.885816|75.35476|110.18652|18
-Hematológico|74.68333|6.817624|61.32104|88.04563|19.5
-Completo|160.7074|7.194252|146.6069|174.8079|62
+<!-- A seguir podemos observar melhor esses valores de tendência central. -->
+<!-- Dados|Media|DP|IC Inferior|IC Superior|Mediana -->
+<!-- ---------|-------|-------------|---------|-------|------------- -->
+<!-- Sólido localizado|226.3667|13.77624|199.3657|253.3676|182+ -->
+<!-- Metastático|92.77064|8.885816|75.35476|110.18652|18 -->
+<!-- Hematológico|74.68333|6.817624|61.32104|88.04563|19.5 -->
+<!-- Completo|160.7074|7.194252|146.6069|174.8079|62 -->
 
 ```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5}
 h0 <- muhaz(dados1$tempo, dados1$status, min.time = 1, max.time = 182)
