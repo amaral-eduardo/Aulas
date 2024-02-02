@@ -6,7 +6,7 @@ packages <- c("readxl", "tseries", "timeSeries", "ggplot2", "forecast", "fpp2",
 
 if(length(setdiff(packages, rownames(installed.packages()))) > 0){
   install.packages(setdiff(packages, rownames(installed.packages())))
-} #Verifica se está instalado, se não estiver, vai instalar
+} #Verifica se est? instalado, se n?o estiver, vai instalar
 
 lapply(packages, library, character.only = TRUE)
 
@@ -40,7 +40,7 @@ plot(x1,
      xlab='Anos',
      ylim=c(22,30),
      ylab='Temperatura (oC)',
-     main='Temperatura média do ar em Recife, em meses sucessivos')
+     main='Temperatura m?dia do ar em Recife, em meses sucessivos')
 
 #ou
 
@@ -72,40 +72,40 @@ plot(x4)
 
 # Semanas fixa em 52
 
-# Primeira Diferença => Linear
+# Primeira Diferen?a => Linear
 plot(diff(y),type='l',lwd=2,col='blue',xlab='',ylim=c(0,30),ylab='diff(y)', main='')
 
-# Segunda Diferença => Linear
+# Segunda Diferen?a => Linear
 plot(diff(diff(y)),type='l',lwd=2,col='blue',xlab='',ylim=c(0,10),ylab='diff(diff(y))', main='')
 
 
-#No banco de dados do R, a serie lh contém as quantidades de um tipo de hormônio
+#No banco de dados do R, a serie lh cont?m as quantidades de um tipo de horm?nio
 #em amostras de sangue coletadas a cada 10 minutos de uma pessoa do sexo feminino
-#(Diggle, 1990). Identifique um modelo ARIMA para esta série temporal.
+#(Diggle, 1990). Identifique um modelo ARIMA para esta s?rie temporal.
 
 data(lh)
 
 is.ts(lh)
 
 par(mfrow = c(3,1))
-plot(lh,xlab='tempo',ylab='observações',main='') # Se pa que nao estacionaria, ver nos testes a seguir
+plot(lh,xlab='tempo',ylab='observa??es',main='') # Se pa que nao estacionaria, ver nos testes a seguir
 acf (lh,xlab='defasagem',ylab='FAC',main='') # Chute de ordem 1 para modelo medias moveis
 pacf(lh,xlab='defasagem',ylab='FACP',main='') # Chute de ordem 1 para modelo autoregressivo
 par(mfrow = c(1,1))
 
 astsa::acf2(lh)
 
-#A série precisa ser diferenciada?
+#A s?rie precisa ser diferenciada?
 
 #require(forecast)
 
 
 # Testes pra estacionaridade ----------------------------------------------
 
-(d <- ndiffs(lh, alpha = 0.05)) #número de diferenças necessárias
+(d <- ndiffs(lh, alpha = 0.05)) #n?mero de diferen?as necess?rias
 # Nao precisa diferenciar a serie, ja e estacionaria
 
-kpss.test(lh) # hipótese nula: série estacionária;
+kpss.test(lh) # hip?tese nula: s?rie estacion?ria;
 # p-valor>0.05 -> serie estacionaria
 
 adf.test(lh) # serie estacionaria
@@ -115,11 +115,11 @@ pp.test(lh) # serie estacionaria
 
 # Codigo para deixar a serie estacionaria ---------------------------------
 
-## caso precise diferenciar a série 
+## caso precise diferenciar a s?rie 
 #w <- diff(lh, differences = d )
 
 #par(mfrow = c(3,1))
-#plot(w,xlab='tempo',ylab='Diff observações',main='')
+#plot(w,xlab='tempo',ylab='Diff observa??es',main='')
 #acf (w,xlab='defasagem',ylab='FAC',main='')
 #pacf(w,xlab='defasagem',ylab='FACP',main='')
 #par(mfrow = c(1,1))
@@ -130,10 +130,10 @@ pp.test(lh) # serie estacionaria
 
 (mod_1 <- arima(lh, order = c(1,0,0))) # Modelo AR
 # 1 -> Parte AR
-# 0 -> Quantidade de diferenciações realizadas
+# 0 -> Quantidade de diferencia??es realizadas
 # 0 -> Parte de MA - Medias moveis
 
-#tsdiag(mod_1) #script contém erros, não é recomendável usá-lo
+#tsdiag(mod_1) #script cont?m erros, n?o ? recomend?vel us?-lo
 
 (mod_2 <- arima(lh, order = c(0,0,1))) # Modelo MA
 
@@ -147,7 +147,7 @@ pp.test(lh) # serie estacionaria
 (Ajuste_AutoArima = auto.arima(lh))
 
 ################################################
-##### Análise de Resíduos
+##### An?lise de Res?duos
 ################################################
 
 fit.arma <- arima(lh, order=c(1,0,0), include.mean = FALSE)
@@ -156,19 +156,38 @@ E <- fit.arma$residuals
 
 checkresiduals(fit.arma)
 
-## Testes estatísticos
+## Testes estat?sticos
 
 # Estacionaridade
-kpss.test(E) # hipótese nula: série estacionária
+kpss.test(E) # hip?tese nula: s?rie estacion?ria
 
 adf.test(E)
 
 pp.test(E)
 
-# independência
+# independ?ncia
 Box.test(E, lag = 20, type ="Ljung-Box", fitdf = 1) ## use fitdf= p+q, no caso 1+0
 # Fitdf 'e o numero de parametros que foram utilizados AR = 1 = p; IM = 0 = q
 
 # normalidade
 shapiro.test(E) # Nao normal, mas estamos preocupados mais com a variancia
 # Como no grafico a normalidade esta dentro da normalidade, vamos manter o modelo
+
+
+
+# Aula 01/02 --------------------------------------------------------------
+
+### PrediÃ§Ã£o - FOrecast
+prev_lh <- forecast(mod_1, h = 15, level = c(80, 95))
+prev_lh
+plot(prev_lh, ylab = 'lh')
+
+### Bandas de confian'ca muitos grandes
+
+
+
+
+
+
+
+
