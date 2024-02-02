@@ -1,0 +1,443 @@
+---
+title: ''
+output:
+  pdf_document: default
+geometry: left = 2.5cm, right = 2cm, top = 2cm, bottom = 2cm
+fontsize: 12pt
+header-includes:
+- \usepackage{float}
+- \usepackage{sectsty}
+- \usepackage{paralist}
+- \usepackage{fancyhdr}
+- \usepackage{lastpage}
+- \usepackage{dcolumn}
+- \usepackage{anyfontsize}
+- \usepackage{pdflscape}
+# - \usepackage[portuguese]{babel}
+- \usepackage[utf8]{inputenc}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
+- \usepackage{multicol}
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+options(htmltools.dir.version = FALSE)
+```
+
+```{r}
+
+# tinytex::r_texmf()
+# 
+# tinytex:::install_prebuilt()
+# tinytex::r_texmf()
+# unlink(".RData", recursive = TRUE)
+# tinytex::tlmgr_repo()
+
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+library(hnp)
+library(pscl)
+library(pROC)
+library(caret)
+library(lmtest)
+#library(QuantPsyc)
+library(margins)
+library(RColorBrewer)
+#library(Hmisc)
+library(corrplot)
+library(pander)
+library(knitr)
+library(gridExtra)
+library(car)
+library(effects)
+library(GLMsData)
+#library(DHARMa)
+library(dplyr)
+library(tibble)
+#install.packages("DHARMa")
+require(muhaz)
+require(flexsurv)
+library(survival)
+library(survminer)
+library(parmsurvfit)
+library(flexsurv)
+library(muhaz)
+
+panderOptions("table.split.cells", 100) #aumenta a quantidades de carcteres permitidos em uma celula da tabela "pander" 
+pander::panderOptions('table.split.table', 300)
+panderOptions('table.alignment.default', 'left')
+```
+
+```{r echo=FALSE}
+academico1 = "EDUARDO AMARAL"
+ra1 = "RA 110108"
+
+academico2 = "EDUARDO PEDRO FARIAS"
+ra2 = "RA 110116"
+
+prof = "PROF. DR. BRIAN ALVAREZ RIBEIRO DE MELO"
+
+materia = "ANALISE DE SOBREVIVÊNCIA"
+titulo = "ESTUDO SOBRE OS PACIENTES COM CÂNCER INTERNADOS NA UTI DO INCA"
+
+#tinytex:::install_prebuilt()
+
+```
+
+```{r echo=FALSE, child='capa.Rmd'}
+```
+
+<!-- \newpage -->
+
+<!-- \tableofcontents -->
+
+\newpage
+
+  Os dados que utilizaremos são proveninentes de um grupo de 862 pacientes com câncer internados na Unidade de Terapia Intensiva (UTI) do Instituto Nacional de Câncer (INCA), estudados por um período de 182 dias, publicado por Soares e cols. (2006). As variáveis presentes são:
+
+ - id: identificação do paciente;
+ - tempo: a partir do primeiro caso, acompanhado em dias;
+ - status: óbito = 1, censura = 0;
+ - sexo: Mas = masculino, Fem = feminino;
+ - idade: em anos completos;
+ - gptumor: 	tipo de tumor: Loco = sólido localizado; Mtx = metastático; Hemato = hematológico;
+ - desnut: Sim = perda de peso recente acima de 10% ou IMC < 18; Não: c.c.;
+ - comorbi: Sim = comorbidades severas presentes; Não = ausente;
+ - leucopenia: Sim = leucopenia presente; Não = ausente.
+ 
+Temos então como objetivo analisar o tempo de vida desses pacientes, através dos fatores apresentados, observando o óbito e a censura presentes. Nesta primeira visita, estaremos trabalhando em torno da variável gptumor. Daremos inicio estimando a função de sobrevivência pelo método de Kaplan-Meier.
+
+```{r dados}
+dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE)
+
+dados$sexo <- ifelse(dados$sexo == "Male","Mas","Fem")
+dados$desnut <- ifelse(dados$desnut == "n", "Não", "Sim")
+dados$comorbi <- ifelse(dados$comorbi == "n", "Não", "Sim")
+dados$leucopenia <- ifelse(dados$leucopenia == "n", "Não", "Sim")
+
+dados$sexo <- factor(dados$sexo, levels = c("Mas","Fem"))
+dados$desnut <- factor(dados$desnut, levels = c("Sim","Não"))
+dados$comorbi <- factor(dados$comorbi, levels = c("Sim","Não"))
+dados$leucopenia <- factor(dados$leucopenia, levels = c("Sim","Não"))
+dados$gptumor <- factor(dados$gptumor, levels = c("Loco", "Mtx", "Hemato"))
+
+################
+
+Loco <- subset(dados, gptumor=="Loco", select=c('tempo', 'status'))
+Mtx <- subset(dados, gptumor=="Mtx", select=c('tempo', 'status'))
+Hemato <- subset(dados, gptumor=="Hemato", select=c('tempo', 'status'))
+
+dados1 <- dados[,c('tempo', 'status', 'gptumor')]
+
+dados_sob <- Surv(dados1$tempo, dados1$status)
+Loco_sob <- Surv(Loco$tempo, Loco$status)
+Mtx_sob <- Surv(Mtx$tempo, Mtx$status)
+Hemato_sob <- Surv(Hemato$tempo, Hemato$status)
+
+km1 <- survfit(dados_sob~1)
+km2 <- survfit(Loco_sob~1)
+km3 <- survfit(Mtx_sob~1)
+km4 <- survfit(Hemato_sob~1)
+```
+
+
+```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5}
+plot(km2, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
+     ylab='Prob. de sobrevida estimada', main = 'Função de Sobrevivência', col = 4)
+lines(km3, mark.time=T, conf.int=F, lwd=2, col=3)
+lines(km4, mark.time=T, conf.int=F, lwd=2, col=2)
+lines(km1, mark.time=T, conf.int=F, lwd=2, col=1)
+
+# abline(v = 183, col = 4, lwd = 2, lty = 2)
+abline(v = 18, col = 3, lwd = 2, lty = 2)
+abline(v = 20, col = 2, lwd = 2, lty = 2)
+abline(v = 62, col = 1, lwd = 2, lty = 2)
+
+legend(130,0.95, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
+                         'Completo')), lwd=2, col=4:1, bty='o')
+```
+
+A figura acima, referente a função de sobrevivência nos mostra o tempo de sobrevida relacionado com a problabilidade de sobrevida estimada, separando pelo tipo de tumor (gptumor), temos que o sólido localizado (Loco) está acima dos demais, isto nos da indícios de que quem desenvolveu apenas este tumor, tem uma sobrevida maior que quem tem os outros dois tipos de tumores. Note-se também que o sólido influencia no Completo, este que se refere aos dados totais. Destaca-se neste grafico as medianas também, note que como podemos confirmar, o metastático e o hematológico apresentam tempos de sobrevida menor nesste estudo, no caso do sólido, temos que sua mediana não esta presente pelo fato da maioria dos pacientes não terem vindo a óbito durante o estudo.
+
+A seguir podemos observar melhor esses valores de tendência central.
+
+Dados|Media|DP|IC Inferior|IC Superior|Mediana
+---------|-------|-------------|---------|-------|-------------
+Sólido localizado|226.3667|13.77624|199.3657|253.3676|182+
+Metastático|92.77064|8.885816|75.35476|110.18652|18
+Hematológico|74.68333|6.817624|61.32104|88.04563|19.5
+Completo|160.7074|7.194252|146.6069|174.8079|62
+
+A tabela apresenta os valores de tendência central para três grupos: Sólido Localizado, Metastático e Hematológico, além do conjunto completo de dados.
+Observa-se que o grupo Sólido Localizado apresenta a maior média e mediana, indicando que este grupo tende a ter valores mais altos. O intervalo de confiança (IC) para este grupo também é amplo, sugerindo uma maior variabilidade nos dados.
+Os grupos Metastático e Hematológico têm médias e medianas consideravelmente menores, com o grupo Hematológico apresentando os menores valores. Isso indica que estes grupos tendem a ter valores mais baixos.
+O conjunto completo de dados, que inclui todos os grupos, tem uma média e mediana intermediárias em relação aos grupos individuais. Isso é esperado, pois o conjunto completo de dados inclui uma mistura de todos os grupos.
+
+
+
+```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5}
+h0 <- muhaz(dados1$tempo, dados1$status, min.time = 1, max.time = 182)
+
+# Loco
+h1 <- muhaz(Loco$tempo, Loco$status, min.time = 1, max.time = 182)
+
+# Hemato
+h2 <- muhaz(Hemato$tempo, Hemato$status, min.time = 1, max.time = 182)
+
+# Mtx
+h3 <- muhaz(Mtx$tempo, Mtx$status, min.time = 1, max.time = 182)
+
+# Graficos
+plot(h1, mark.time=T, conf.int=F, lwd=2, xlab='Tempo de sobrevida',
+     ylab='Função de Risco Estimada', col=4, main = "Funçao de Risco")
+lines(h3, mark.time=T, conf.int=F, lwd=2, col=3)
+lines(h2, mark.time=T, conf.int=F, lwd=2, col=2)
+lines(h0, mark.time=T, conf.int=F, lwd=2, col=1)
+legend(130,0.025, paste(c('Sólido localizado', 'Metastático', 'Hematológico',
+                         'Completo')), lwd=2, col=4:1, bty='o')
+```
+
+Temos na figura acima um gráfico referente a função de risco, com este temos que uma confirmação com a função de sobrevivência, tendo os pacientes com um tumor sólido localizado com um tempo de sobrevida maior que os demais tumores. Esses ocorrendo um número maior de óbito nos primeiros 50 dias de acompanhamento.
+
+
+A seguir, estaremos realizando alguns ajustes de modelos paramétricos.
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.show='hide'}
+
+dadosT <- split(dados, dados$gptumor)
+
+
+DS <- data.frame(gptumor = names(dadosT),
+                 N = sapply(dadosT, nrow),
+                 Failures = sapply(dadosT, function(x) sum(x$status == 1)),
+                 Censored = sapply(dadosT, function(x) sum(x$status == 0)))
+rownames(DS) <- NULL
+
+
+
+
+KM <- list()
+par(mfrow = c(1, 3))
+for(i in 1:3){
+  KM[[i]] <- survfit(Surv(tempo, status) ~ 1, data = dadosT[[i]])
+  
+  plot(KM[[i]], mark.time = T, conf.int = T, col = "red",
+       xlim = c(0, 35),
+       main = paste0(names(dadosT)[i], " (n = ", nrow(dadosT[[i]]), ")"),
+       ylab = expression(S(t)),
+       xlab = "Tempo (dias)")
+  text(x = 25, y = 0.9, paste0("Media = ", round(sum(summary(KM[[i]])$surv), 2), "\n",
+                               "Mediana = ", surv_median(KM[[i]])$median))
+}
+
+RF <- list()
+par(mfrow = c(1, 3))
+for(i in 1:3){
+  RF[[i]] <- muhaz(dadosT[[i]]$tempo, dadosT[[i]]$status, bw.method='local', b.cor='both',
+                   min.time = 1, max.time = 182)
+  
+  plot(RF[[i]], col = "red",
+       main = paste0(names(dadosT)[i], " (n = ", nrow(dadosT[[i]]), ")"),
+       ylab = expression(h(t)),
+       xlab = "Tempo (dias)")
+}
+```
+
+```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5}
+dadosT <- split(dados, dados$gptumor)
+
+tt <- seq(0, 182, 0.1)
+
+par(mfrow = c(1, 2))
+
+nomesTumor <- c("Sólido localizado", 'Metastático', 'Hematológico')
+
+df_survival <- data.frame(Modelo = character(0), AIC = numeric(0), BIC = numeric(0))
+
+for(i in 1:3){
+  
+  # Exponential
+  fit_exp <- fit_data(dadosT[[i]], dist = "exp", time = "tempo", censor = "status")
+  ss_exp <- 1 - pexp(tt, fit_exp$estimate)
+  hh_exp <- dexp(tt, rate = fit_exp$estimate)/ss_exp
+  aic_exp <- summary(fit_exp)$aic
+  bic_exp <- summary(fit_exp)$bic
+  
+  # Weibull
+  fit_weib <- fit_data(dadosT[[i]], dist = "weibull", time = "tempo", censor = "status")
+  ss_weib <- 1 - pweibull(tt, shape = fit_weib$estimate[1], scale = fit_weib$estimate[2])
+  hh_weib <- dweibull(tt,  shape = fit_weib$estimate[1], scale = fit_weib$estimate[2])/ss_weib
+  aic_weib <- summary(fit_weib)$aic
+  bic_weib <- summary(fit_weib)$bic
+  
+  # Gamma
+  fit_gamma <- flexsurvreg(Surv(dadosT[[i]]$tempo, dadosT[[i]]$status) ~ 1,
+                           dist = "gamma")
+  ss_gamma <- 1 - pgamma(tt, fit_gamma$res[1], fit_gamma$res[2])
+  hh_gamma <- dgamma(tt, fit_gamma$res[1], fit_gamma$res[2])/ss_gamma
+  aic_gamma <- AIC(fit_gamma)
+  bic_gamma <- BIC(fit_gamma)
+  
+  # Log-normal
+  fit_lnorm <- fit_data(dadosT[[i]], dist = "lnorm", time = "tempo", censor = "status")
+  ss_lnorm <- 1 - plnorm(tt, fit_lnorm$estimate[1], fit_lnorm$estimate[2])
+  hh_lnorm <- dlnorm(tt, fit_lnorm$estimate[1], fit_lnorm$estimate[2])/ss_lnorm
+  aic_lnorm <- summary(fit_lnorm)$aic
+  bic_lnorm <- summary(fit_lnorm)$bic
+  
+  # Log-logistic
+  fit_llog <- fit_data(dadosT[[i]], dist = "llogis", time = "tempo", censor = "status")
+  ss_llog <- 1 - pllogis(tt, fit_llog$estimate[1], fit_llog$estimate[1])
+  hh_llog <- dllogis(tt, fit_llog$estimate[1], fit_llog$estimate[2])/ss_llog
+  aic_llog <- summary(fit_llog)$aic
+  bic_llog <- summary(fit_llog)$bic
+  
+  # Gompertz
+  fit_gomp <- flexsurvreg(Surv(dadosT[[i]]$tempo, dadosT[[i]]$status) ~ 1,
+                          dist = "gamma")
+  ss_gomp <- 1 - pgompertz(tt, fit_gomp$res[1], fit_gomp$res[2])
+  hh_gomp <- dgompertz(tt, fit_gomp$res[1], fit_gomp$res[2])/ss_gomp
+  aic_gomp <- AIC(fit_gomp)
+  bic_gomp <- BIC(fit_gomp)
+  
+  # Generalized Gama
+  fit_ggamma <- flexsurvreg(Surv(dadosT[[i]]$tempo, dadosT[[i]]$status) ~ 1,
+                            dist = "gengamma.orig")
+  ss_ggamma <- 1 - pgengamma.orig(tt, fit_ggamma$res[1], fit_ggamma$res[2], fit_ggamma$res[3])
+  hh_ggamma <- dgengamma.orig(tt, fit_ggamma$res[1], fit_ggamma$res[2], fit_ggamma$res[3])/ss_gamma
+  aic_ggamma <- AIC(fit_ggamma)
+  bic_ggamma <- BIC(fit_ggamma)
+  
+  # Plot survival function
+  plot(KM[[i]], mark.time = F, conf.int = F, col = "black",
+       xlim = c(0, 182),
+       main = paste0(nomesTumor[i]),
+       ylab = expression(S(t)),
+       xlab = "Tempo (dias)")
+  lines(ss_exp ~ tt, col = "blue")
+  lines(ss_weib ~ tt, col = "green")
+  lines(ss_gamma ~ tt, col = "purple")
+  lines(ss_lnorm ~ tt, col = "yellow")
+  lines(ss_llog ~ tt, col = "orange")
+  lines(ss_gomp ~ tt, col = "red")
+  lines(ss_ggamma ~ tt, col = "darkgreen")
+  
+  # Plot hazard function
+  plot(RF[[i]]$haz.est, type = "l",
+       col = "black",
+       #ylim = c(0, 1),
+       main = paste0(nomesTumor[i]),
+       ylab = expression(h(t)),
+       xlab = "Tempo (dias)")
+  lines(hh_exp[-1] ~ tt[-1], col = "blue")
+  lines(hh_weib[-1] ~ tt[-1], col = "green")
+  lines(hh_gamma[-1] ~ tt[-1], col = "purple")
+  lines(hh_lnorm[-1] ~ tt[-1], col = "yellow")
+  lines(hh_llog[-1] ~ tt[-1], col = "orange")
+  lines(hh_gomp[-1] ~ tt[-1], col = "red")
+  lines(hh_ggamma[-1] ~ tt[-1], col = "darkgreen")
+  
+  # Adição das informações ao data frame
+  df_survival <- rbind(df_survival,
+                       data.frame(Modelo = c("Exponencial", "Gama", "Log-normal", "Log-logística", "Gompertz", "Weibull","Gama Generalizada"),
+                                  AIC = c(aic_exp, aic_gamma, aic_lnorm, aic_llog, aic_gomp, aic_weib,aic_ggamma),
+                                  BIC = c(bic_exp, bic_gamma, bic_lnorm, bic_llog, bic_gomp, bic_weib,bic_ggamma)))
+  #pander(df_survival)
+}
+
+
+
+# knitr::kable(lognormal_fit$res.t,align = "c")
+```
+
+```{r fig.width=16, fig.height=2.5}
+par(mfrow = c(1, 1))
+
+plot(1:1, type = "n", xlab = "", ylab = "", xlim = c(0, 1), ylim = c(0, 1),
+     bty = 'n', axes = F)
+
+legend("center", paste(c('Exponencial', 'Weibull', 'Gamma', 'Log Normal',
+  'Log Logistica', 'Gompertz', 'Gama Generalizada')), lwd=9,
+  col=c("blue", "green", "purple", "yellow", "orange", "red", "darkgreen"), bty='o',ncol = 7, cex = 1)
+```
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{lcccccc}
+    \hline
+    Modelo & \multicolumn{2}{c}{Grupo Loco} & \multicolumn{2}{c}{Grupo Mtx} & \multicolumn{2}{c}{Grupo Hemato} \\
+    \cline{2-7}
+    & AIC & BIC & AIC & BIC & AIC & BIC \\
+    \hline
+    Exponencial & 3470 & 3474 & 1208 & 1211 & 1277 & 1280 \\
+    Gama & 3249 & 3258 & 1116 & 1122 & 1214 & 1220 \\
+    Log-normal & 3176 & 3184 & 1068 & 1074 & 1168 & 1174 \\
+    Log-logística & 3202 & 3210 & 1075 & 1081 & 1172 & 1178 \\
+    Gompertz & 3249 & 3258 & 1116 & 1122 & 1214 & 1220 \\
+    Weibull & 3228 & 3237 & 1099 & 1105 & 1198 & 1204 \\
+    Gama Generalizada & 3188 & 3201 & 1075 & 1085 & 1175 & 1184 \\
+    \hline
+  \end{tabular}
+  \caption{Tabela de Modelos com AIC e BIC para Grupos Sólido localizado, Metastático e Hematológico.}
+  \label{tab:modelos}
+\end{table}
+
+Visualmente temos que as distribuições conseguem ter um bom ajuste nos dados, utilizando dos critérios de BIC e AIC, ficamos com a Log-normal. Isto para os 3 tipos diferentes de tumor.
+
+<!-- Observando apenas o grupo Sólido localizado, visualmente temos que a distribuição que melhor se ajustou aos dados foi a Gamma, todavia nos casos do Metastático e Hematológico quem se aproxima de um melhor ajuste foi a Log-logistica. Mas ainda assim nenhum conseguiu captar ambas as funções de risco e sobrevivência de forma muito aceitável. -->
+<!-- Por fim, podemos ver que pacientes que apresentaram o tumor Sólido localizado tem uma expectativa de sobrevida maior do que os demais grupos de tumor, isso pode estar ligado ao fato da agressividade interna pro organismo que os tumores Metastático e Hematológico provocam, deixando um rastro infectológico por onde passam no corpo humano. -->
+
+\newpage
+
+**Testes de log rank**
+
+O teste log-rank é uma análise estatística amplamente utilizada para comparar a sobrevivência de grupos.
+O valor de p do teste log-rank indica se há uma diferença significativa entre os grupos em estudo.
+
+*Hipótese estatística:*
+
+$$
+\begin{cases}
+H_0 : \text{Os grupos são iguais;} \\
+H_1 : \text{Os grupos não são iguais.}
+\end{cases}
+$$
+
+
+*Sólido localizado X Hematológico*
+
+```{r}
+dados_comparar <- subset(dados1, gptumor==c('Loco','Hemato'),
+                         select=c('tempo', 'status', 'gptumor'))
+
+Y <- Surv(dados_comparar$tempo, dados_comparar$status)
+X <- dados_comparar$gptumor
+pander(survdiff(Y~X))
+```
+
+Comparando os grupos sólido localizado e hematológico, temos que o p-valor foi significativo (p<0.05), indicando que há uma diferença entre os dois grupos.
+
+*Sólido localizado X Metastático*
+
+```{r}
+dados_comparar <- subset(dados1, gptumor==c('Loco','Mtx'),
+                         select=c('tempo', 'status', 'gptumor'))
+
+Y <- Surv(dados_comparar$tempo, dados_comparar$status)
+X <- dados_comparar$gptumor
+pander(survdiff(Y~X))
+```
+
+Comparando os grupos sólido localizado e metastático, o p-valor também foi significativo (p<0.05), sugerindo novamente uma diferença significativa entre os grupos.
+
+<!-- Portanto, conforme indicado inicialmente pela análise das curvas distintas na função de sobrevivência, agora temos a confirmação do teste log-rank. Este teste evidencia que os grupos Metastático e Hematológico são estatisticamente diferentes do grupo Sólido Localizado.  -->
+
+Os resultados do estudo revelaram que o grupo de pacientes com tumor sólido localizado apresentaram um tempo de sobrevivência significativamente maior e uma probabilidade de sobrevivência mais alta em comparação com os grupos de pacientes com tumor metastático ou hematológico. Este resultado foi confirmado pelo teste log-rank, que indicou diferenças estatisticamente significativas entre os grupos. Isto pode estar ligado ao fato da agressividade interna pro organismo que os tumores Metastático e Hematológico provocam, deixando um rastro infectológico por onde passam no corpo humano.
+<!-- No entanto, os modelos paramétricos utilizados no estudo não conseguiram captar adequadamente as características das funções de risco e sobrevivência. Isso sugere a necessidade de explorar outros modelos ou abordagens que possam fornecer uma representação mais precisa dessas funções. -->
