@@ -17,6 +17,7 @@ library(magrittr)
 ## HW - Aditivo (default)
 (fit.ad <- HoltWinters(x= AirPassengers, seasonal = "additive"))
 
+<<<<<<< HEAD
 fit.ad$alpha
 fit.ad$beta
 fit.ad$gamma # Indica que esta usando o final para pegar para o ajuste
@@ -33,6 +34,16 @@ fit.mult$alpha # Queremos valores mais intermediarios para as 3 medidas
 fit.mult$beta
 fit.mult$gamma # Valor mais no meio, pega valores melhores para estimar
 
+=======
+plot(fit.ad)		
+
+predict(fit.ad, n.ahead = 10, prediction.interval = TRUE, 
+        level = 0.95)   # previsão
+
+## HW - Multiplicativo
+(fit.mult <- HoltWinters(x= AirPassengers, seasonal = "multiplicative"))
+
+>>>>>>> dedb7caa1b6f4161b09d818a292c320130d37474
 plot(fit.mult)			
 
 predict(fit.mult, n.ahead = 10, prediction.interval = TRUE,
@@ -85,7 +96,10 @@ legend(x= 1950, y= 650, legend=colnames(x), box.lwd='white',
 ###############################################
 
 require(forecast)
+<<<<<<< HEAD
 y <- AirPassengers
+=======
+>>>>>>> dedb7caa1b6f4161b09d818a292c320130d37474
 
 ## SES  --> ajuste e previsão
 ses(y, h = 10, level = c(80, 95), initial = c("optimal", "simple"))
@@ -168,7 +182,10 @@ Box.test(E, lag = 15, type ="Ljung-Box", fitdf = 3)
 # normalidade
 shapiro.test(E)
 
+<<<<<<< HEAD
 #Estudar o modelo Tbats -> Trignometria, BoxCos, Arima, Tendencia e Sazonalidade
+=======
+>>>>>>> dedb7caa1b6f4161b09d818a292c320130d37474
 
 #####################################
 # 2) airmiles        ################
@@ -201,7 +218,11 @@ E <- fit.holt$residuals ## resíduos do método selecionado
 # visual
 par(mfrow=c(2,2))
 plot(E)
+<<<<<<< HEAD
 acf(E) # Note que as bandas estao em 0.4 pelo fato de ser menor numero de dados
+=======
+acf(E)
+>>>>>>> dedb7caa1b6f4161b09d818a292c320130d37474
 pacf(E)
 qqnorm(E)
 qqline(E)
@@ -210,6 +231,7 @@ par(mfrow=c(1,1))
 ## testes estatísticos
 
 # Estacionaridade
+<<<<<<< HEAD
 kpss.test(E) # hipótese nula: série estacionária. OK
 
 # indepêndencia
@@ -217,6 +239,15 @@ Box.test(E, lag = 15, type ="Ljung-Box", fitdf = 2) # OK
 
 # normalidade
 shapiro.test(E) # OK
+=======
+kpss.test(E) # hipótese nula: série estacionária
+
+# indepêndencia
+Box.test(E, lag = 15, type ="Ljung-Box", fitdf = 2) 
+
+# normalidade
+shapiro.test(E)
+>>>>>>> dedb7caa1b6f4161b09d818a292c320130d37474
 
 
 #####################################

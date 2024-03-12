@@ -4,27 +4,27 @@
 #######################################
 
 # Estrutura que permite descrever os modelos de 
-# alisamento exponencial em função dos tipos de suas 
-# componentes de erro, tendência e sazonalidade
+# alisamento exponencial em fun??o dos tipos de suas 
+# componentes de erro, tend?ncia e sazonalidade
 
 require(forecast)
 require(tseries)
 
-# ets(y, model = "ZZZ", damped = NULL, alpha = NULL, 
-#           beta = NULL, gamma = NULL, phi = NULL, 
+# ets(y, model = "ZZZ", damped = NULL, alpha = NULL,  # ZZZ para testar td aleatorio
+#           beta = NULL, gamma = NULL, phi = NULL,
 #           allow.multiplicative.trend = FALSE)
 
 
-# Exemplos via ETS 
+# Exemplos via ETS - A: Aditivo; N: Neutral; M: Multiplicativo
 ###  SES: ets(y, model = "ANN", damped=FALSE)
 ###  Holt: ets(y, model = "AAN", damped=FALSE)
 ###  Holt + Damped: ets(y, model = "AAN", damped=TRUE)
 ###  HW Aditivo: ets(y, model = "AAA", damped=FALSE)
 ###  HW Multip.: ets(y, model = "MAM", damped=FALSE)
 
-## São proíbidas na função ets(): ETS(A;N;M), ETS(A;A;M),
-#ETS(A;Ad;M); pois algumas combinações de erro, tendência e
-#sazonalidade podem apresentar problemas numéricos, em 
+## S?o pro?bidas na fun??o ets(): ETS(A;N;M), ETS(A;A;M),
+#ETS(A;Ad;M); pois algumas combina??es de erro, tend?ncia e
+#sazonalidade podem apresentar problemas num?ricos, em 
 #especial aquelas que misturam erro aditivo com sazonalidade
 #multiplicativa.
 
@@ -33,7 +33,7 @@ require(tseries)
 
 fit <- ets(AirPassengers)
 
-summary(fit)
+summary(fit) # Smoothing: suavizacao
 
 ## plot das componentes
 autoplot(fit)
@@ -43,7 +43,7 @@ autoplot(fit)
 plot(AirPassengers)
 lines(fitted(fit), col= "red")
 
-### análise de resíduos para o método selecionado
+### an?lise de res?duos para o m?todo selecionado
 E <- fit$residuals 
 
 par(mfrow=c(2,2))
@@ -54,10 +54,10 @@ qqnorm(E)
 qqline(E)
 par(mfrow=c(1,1))
 
-## Testes estatísticos
+## Testes estat?sticos
 
 # Estacionaridade
-kpss.test(E) # hipótese nula: série estacionária
+kpss.test(E) # hip?tese nula: s?rie estacion?ria
 
 # independencia
 Box.test(E, lag = 15, type ="Ljung-Box", fitdf = 3)
@@ -65,14 +65,14 @@ Box.test(E, lag = 15, type ="Ljung-Box", fitdf = 3)
 # normalidade
 shapiro.test(E)
 
-### Previsão 
+### Previs?o 
 prev <- forecast(fit, h=24, level = c(80, 95))
 
 summary(prev)
 
 plot(prev)
 
-### previsões intervalares não paramétricas (bootstrap via reamostragem dos erros)
+### previs?es intervalares n?o param?tricas (bootstrap via reamostragem dos erros)
 
 prev <- forecast(fit, h=24, level = c(80, 95), bootstrap = TRUE)
 
@@ -89,7 +89,7 @@ fit_1 <- Arima(AirPassengers, order= c(1,1,1),
 summary(fit_1)
 
 
-#### Exercício: estudar as séries
+#### Exerc?cio: estudar as s?ries
 
 require(fpp2)
 

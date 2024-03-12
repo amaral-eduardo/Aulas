@@ -55,7 +55,7 @@ library(dygraphs)
 dygraph(x1, main = " ", xlab='Anos', ylab='Temperatura (oC)') %>% 
   dyAxis("x", drawGrid = FALSE) %>% 
   dyEvent("1960-4-01", "1960", labelLoc = "bottom") %>% # Destacar no grafico um ano especifico
-    dyOptions(drawPoints = TRUE, pointSize = 2)
+  dyOptions(drawPoints = TRUE, pointSize = 2)
 
 
 
