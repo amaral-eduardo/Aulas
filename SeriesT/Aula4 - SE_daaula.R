@@ -7,17 +7,16 @@ library(ggplot2)
 library(magrittr)
 
 ###############################################
-### Função base para alisamento exponencial ###
+### Fun??o base para alisamento exponencial ###
 ###############################################
 
-## OBS: Ajuste via minimização da soma dos erros ao quadrado (EMQ)
+## OBS: Ajuste via minimiza??o da soma dos erros ao quadrado (EMQ)
 
 #### Modelos de Holt - Winters 
 
 ## HW - Aditivo (default)
 (fit.ad <- HoltWinters(x= AirPassengers, seasonal = "additive"))
 
-<<<<<<< HEAD
 fit.ad$alpha
 fit.ad$beta
 fit.ad$gamma # Indica que esta usando o final para pegar para o ajuste
@@ -25,7 +24,7 @@ fit.ad$gamma # Indica que esta usando o final para pegar para o ajuste
 plot(fit.ad)		
 
 predict(fit.ad, n.ahead = 10, prediction.interval = TRUE,
-        level = 0.95)   # previsão, testar levels diferentes e c(x,y,...)
+        level = 0.95)   # previs?o, testar levels diferentes e c(x,y,...)
 
 ## HW - Multiplicativo - Por causa dos crescimentos em picos.
 (fit.mult <- HoltWinters(x= AirPassengers, seasonal = "multiplicative"))
@@ -34,20 +33,18 @@ fit.mult$alpha # Queremos valores mais intermediarios para as 3 medidas
 fit.mult$beta
 fit.mult$gamma # Valor mais no meio, pega valores melhores para estimar
 
-=======
 plot(fit.ad)		
 
 predict(fit.ad, n.ahead = 10, prediction.interval = TRUE, 
-        level = 0.95)   # previsão
+        level = 0.95)   # previs?o
 
 ## HW - Multiplicativo
 (fit.mult <- HoltWinters(x= AirPassengers, seasonal = "multiplicative"))
 
->>>>>>> dedb7caa1b6f4161b09d818a292c320130d37474
 plot(fit.mult)			
 
 predict(fit.mult, n.ahead = 10, prediction.interval = TRUE,
-        level = 0.95) #previsão
+        level = 0.95) #previs?o
 
 
 ## OBS 3: Os modelos SES e Holt podem ser acessados da seguinte forma:
@@ -64,10 +61,10 @@ plot(fit.ses)
 plot(fit.holt)
 
 
-## Observação: Tendência Damped não está disponível na função base
+## Observa??o: Tend?ncia Damped n?o est? dispon?vel na fun??o base
 
 
-### Alternativa para plotar as previsões
+### Alternativa para plotar as previs?es
 
 x <- cbind(AirPassengers, predict(fit.ses,18),
            predict(fit.holt,18),
@@ -96,28 +93,25 @@ legend(x= 1950, y= 650, legend=colnames(x), box.lwd='white',
 ###############################################
 
 require(forecast)
-<<<<<<< HEAD
 y <- AirPassengers
-=======
->>>>>>> dedb7caa1b6f4161b09d818a292c320130d37474
 
-## SES  --> ajuste e previsão
+## SES  --> ajuste e previs?o
 ses(y, h = 10, level = c(80, 95), initial = c("optimal", "simple"))
 
 
-## Holt --> ajuste e previsão
+## Holt --> ajuste e previs?o
 holt(y, h = 10, damped = FALSE, level = c(80, 95), 
      initial = c("optimal", "simple"))
 
-## Holt+Damped --> ajuste e previsão
+## Holt+Damped --> ajuste e previs?o
 holt(y, h = 10, damped = TRUE, level = c(80, 95), 
      initial = c("optimal", "simple"))
 
-## Holt Winters --> ajuste e previsão
+## Holt Winters --> ajuste e previs?o
 hw(y, h = 10, seasonal = c("additive", "multiplicative"),
    damped = FALSE, level = c(80, 95), initial = c("optimal", "simple"))
 
-## Holt Winters + Damped --> ajuste e previsão
+## Holt Winters + Damped --> ajuste e previs?o
 hw(y, h = 10, seasonal = c("additive", "multiplicative"),
    damped = TRUE, level = c(80, 95), 
    initial = c("optimal", "simple"))
@@ -127,7 +121,7 @@ hw(y, h = 10, seasonal = c("additive", "multiplicative"),
 ### Alguns exemplos       ###
 #############################
 
-require(tseries) ## para usar a função kpss.test()
+require(tseries) ## para usar a fun??o kpss.test()
 
 
 #######################
@@ -153,7 +147,7 @@ summary(fit.hw.mult.dump)
 plot(fit.hw.mult.dump)
 
 
-### seleção do modelo via AIC 
+### sele??o do modelo via AIC 
 fit.hw.ad$model$aic
 fit.hw.mult$model$aic
 fit.hw.mult.dump$model$aic
@@ -161,7 +155,7 @@ fit.hw.mult.dump$model$aic
 
 
 ### analise residual
-E <- fit.hw.mult$residuals ## resíduos do método selecionado
+E <- fit.hw.mult$residuals ## res?duos do m?todo selecionado
 
 # visual
 par(mfrow=c(2,2))
@@ -174,24 +168,21 @@ par(mfrow=c(1,1))
 
 ## testes estatisticos
 # Estacionaridade
-kpss.test(E) # hipótese nula: série estacionária
+kpss.test(E) # hip?tese nula: s?rie estacion?ria
 
-# independência
+# independ?ncia
 Box.test(E, lag = 15, type ="Ljung-Box", fitdf = 3) 
 
 # normalidade
 shapiro.test(E)
 
-<<<<<<< HEAD
 #Estudar o modelo Tbats -> Trignometria, BoxCos, Arima, Tendencia e Sazonalidade
-=======
->>>>>>> dedb7caa1b6f4161b09d818a292c320130d37474
 
 #####################################
 # 2) airmiles        ################
 #####################################
 
-# Série anual de utilização de milhas aéreas
+# S?rie anual de utiliza??o de milhas a?reas
 plot(airmiles)
 
 fit.ses <- ses(airmiles,h=5)
@@ -206,60 +197,54 @@ fit.damped <- holt(airmiles,h=5, damped=T)
 fit.damped$model
 plot(fit.damped)
 
-### selecionando modelo utilizando AICc (Critério de Akaike Corrigido)
+### selecionando modelo utilizando AICc (Crit?rio de Akaike Corrigido)
 
 fit.ses$model$aicc
 fit.holt$model$aicc
 fit.damped$model$aicc
 
 ### analise residual
-E <- fit.holt$residuals ## resíduos do método selecionado
+E <- fit.holt$residuals ## res?duos do m?todo selecionado
 
 # visual
 par(mfrow=c(2,2))
 plot(E)
-<<<<<<< HEAD
 acf(E) # Note que as bandas estao em 0.4 pelo fato de ser menor numero de dados
-=======
 acf(E)
->>>>>>> dedb7caa1b6f4161b09d818a292c320130d37474
 pacf(E)
 qqnorm(E)
 qqline(E)
 par(mfrow=c(1,1))
 
-## testes estatísticos
+## testes estat?sticos
 
 # Estacionaridade
-<<<<<<< HEAD
-kpss.test(E) # hipótese nula: série estacionária. OK
+kpss.test(E) # hip?tese nula: s?rie estacion?ria. OK
 
-# indepêndencia
+# indep?ndencia
 Box.test(E, lag = 15, type ="Ljung-Box", fitdf = 2) # OK
 
 # normalidade
 shapiro.test(E) # OK
-=======
-kpss.test(E) # hipótese nula: série estacionária
+kpss.test(E) # hip?tese nula: s?rie estacion?ria
 
-# indepêndencia
+# indep?ndencia
 Box.test(E, lag = 15, type ="Ljung-Box", fitdf = 2) 
 
 # normalidade
 shapiro.test(E)
->>>>>>> dedb7caa1b6f4161b09d818a292c320130d37474
 
 
 #####################################
 # 3) USAccDeaths   ##################
 #####################################
 
-# série mensal de mortes por acidentes nos EUA
+# s?rie mensal de mortes por acidentes nos EUA
 plot(USAccDeaths)
 
 ## Visulamente, podemos notar:
-# a) Série sazonal, com a amplitude da sazonalidade parece estabilizada (não muda muito ao longo do tempo) 
-# b) Não existe tendência de crescimento/queda
+# a) S?rie sazonal, com a amplitude da sazonalidade parece estabilizada (n?o muda muito ao longo do tempo) 
+# b) N?o existe tend?ncia de crescimento/queda
 
 ## Modelo indicado (visualmente) --> Holt Winters Aditivo
 ## Note que a componente de crescimento poderia ser descartada (beta=FALSE)
@@ -283,8 +268,8 @@ fit.hw.mult$model$aic
 plot(fit.hw.ad)
 
 
-### análise residual
-E <- fit.hw.ad$residuals ## resíduos do modelo selecionado
+### an?lise residual
+E <- fit.hw.ad$residuals ## res?duos do modelo selecionado
 
 # visual
 par(mfrow=c(2,2))
@@ -298,9 +283,9 @@ par(mfrow=c(1,1))
 ## testes estatisticos
 
 # Estacionaridade
-kpss.test(E) # hipótese nula: série estacionária
+kpss.test(E) # hip?tese nula: s?rie estacion?ria
 
-# independência
+# independ?ncia
 Box.test(E, lag = 15, type ="Ljung-Box", fitdf = 3) 
 
 # normalidade

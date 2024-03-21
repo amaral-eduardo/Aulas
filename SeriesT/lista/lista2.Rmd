@@ -1,0 +1,54 @@
+---
+title: ''
+output: pdf_document
+---
+
+# 1
+
+## A)
+
+O parâmetro $\alpha$ chamado de constante de alisamento ou parâmetro da suavização, esta contido num intervalo (0,1), serve para refletir a influência dos valores passados:
+
+- Mais próximo de 0 indica previções que dependem mais dos valores mais antigos.
+- Mais próximo de 1 indica previções que dependem mais das observações mais recentes.
+
+```{r, echo=FALSE, message=FALSE}
+library(forecast)
+library(fpp)
+library(fpp2)
+library(tidyverse)
+library(ggplot2)
+library(magrittr)
+```
+
+
+# 3
+## A) Nile
+```{r}
+plot(Nile)
+```
+
+## B) UKgas
+```{r}
+plot(UKgas)
+```
+
+## C) euretail
+```{r}
+plot(euretail)
+```
+
+## B) ldeaths
+```{r}
+plot(ldeaths)
+```
+
+## B) Vendas
+```{r}
+vendas <- c(500, 350, 250, 400, 450, 350, 200, 300, 350, 200, 150, 400, 550, 350, 250, 
+550, 550, 400, 350, 600, 750, 500, 400, 650)
+
+Ex.E <- ts(vendas, start = 2005, frequency = 3)
+
+plot(Ex.E)
+```
