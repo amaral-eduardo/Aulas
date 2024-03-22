@@ -12,13 +12,14 @@ O parâmetro $\alpha$ chamado de constante de alisamento ou parâmetro da suaviz
 - Mais próximo de 0 indica previções que dependem mais dos valores mais antigos.
 - Mais próximo de 1 indica previções que dependem mais das observações mais recentes.
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(forecast)
 library(fpp)
 library(fpp2)
 library(tidyverse)
 library(ggplot2)
 library(magrittr)
+library(pander)
 ```
 
 
@@ -28,22 +29,47 @@ library(magrittr)
 plot(Nile)
 ```
 
+\newpage
+
+```{r}
+(fit.nile <- HoltWinters(x = Nile, gamma=FALSE))
+
+plot(fit.nile)
+```
+
+\newpage
 ## B) UKgas
 ```{r}
 plot(UKgas)
+
+(fit.UKgas <- HoltWinters(x = UKgas, seasonal = "multiplicative"))
+
+plot(fit.UKgas)
+
 ```
 
+\newpage
 ## C) euretail
 ```{r}
 plot(euretail)
+
+(fit.euretail <- HoltWinters(x = euretail, seasonal = "additive"))
+
+plot(fit.euretail)
 ```
 
+\newpage
 ## D) ldeaths
 ```{r}
 plot(ldeaths)
+
+(fit.ldeaths <- HoltWinters(x = ldeaths, beta=FALSE, gamma=FALSE))
+
+plot(fit.ldeaths)
 ```
 
-## E) Vendas
+\newpage
+## E) Sales
 ```{r}
 vendas <- c(500, 350, 250, 400, 450, 350, 200, 300, 350, 200, 150, 400, 550, 350, 250, 
 550, 550, 400, 350, 600, 750, 500, 400, 650)
@@ -51,4 +77,45 @@ vendas <- c(500, 350, 250, 400, 450, 350, 200, 300, 350, 200, 150, 400, 550, 350
 Ex.E <- ts(vendas, start = 2005, frequency = 3)
 
 plot(Ex.E)
+
+(fit.Ex.E <- HoltWinters(x = Ex.E, seasonal = "additive"))
+
+plot(fit.Ex.E)
+```
+
+\newpage
+# 4
+## A) AirPassengers
+```{r}
+fit.hw.mult <- hw(AirPassengers, h=24, seasonal = "m", initial = "o")
+summary(fit.hw.mult)
+
+plot(fit.hw.mult)
+```
+
+## B) Nile
+```{r}
+# plot(predict(fit.nile, 20))
+
+plot(cbind(Nile, predict(fit.nile, 15)), plot.type='single', col=c(1,2), lwd=2)
+```
+
+## B) UKgas
+```{r}
+plot(cbind(UKgas, predict(fit.UKgas, 12)), plot.type='single', col=c(1,2), lwd=2)
+```
+
+## B) euretail
+```{r}
+plot(cbind(euretail, predict(fit.euretail, 12)), plot.type='single', col=c(1,2), lwd=2)
+```
+
+## B) ldeaths
+```{r}
+plot(cbind(ldeaths, predict(fit.ldeaths, 12)), plot.type='single', col=c(1,2), lwd=2)
+```
+
+## B) Sales
+```{r}
+plot(cbind(Ex.E, predict(fit.Ex.E, 12)), plot.type='single', col=c(1,2), lwd=2)
 ```
